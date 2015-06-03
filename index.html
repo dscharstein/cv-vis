@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lan="en">
+
+    <head>
+        <title>Turn on the lights</title>
+        <script type="text/javascript" src="../lib/webgl-utils.js"></script>
+        <script type="text/javascript" src="../lib/MV.js"></script>
+        <script type="text/javascript" src="../lib/InitShaders.js"></script>
+        
+        
+        <script type="text/javascript" src="image_tool.js"></script>
+        
+        
+        
+        
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+
+        
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+        
+        <script id="fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
+            vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
+
+            void main(){
+                
+                //gl_FragColor = texture2D(u_Image1, v_TexCoord);
+
+                if(u_ImFlag1 == 1){
+                    im1Color = texture2D(u_Image1, v_TexCoord);
+                    if(u_ImFlag2 == 0){
+                        gl_FragColor = im1Color;
+                    }
+                }
+
+                if(u_ImFlag2 == 1){
+                    im2Color = texture2D(u_Image2, v_TexCoord - vec2(0.2, 0.0));
+                    if(u_ImFlag1 == 0){
+                        gl_FragColor = im2Color;
+                    }
+                }
+
+                if(u_ImFlag1 == 1 && u_ImFlag2 == 1){
+                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb) + 1.0) / 2.0, 1.0);
+                }
+
+                if(u_ImFlag1 == 0 && u_ImFlag2 == 0){
+                    gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+                }
+                
+            }
+        </script>
+        
+        
+        
+    </head>
+    <body style="margin: 0; padding: 0;">
+
+        <canvas id="gl-canvas" width="400" height="300">
+            You need a better web browser
+        </canvas>
+        <p>
+            <input id="im1_box" type="checkbox" name="" value="point" /> Image 1
+            <input id="im2_box" type="checkbox" name="point" value="point" /> Image 2
+        </p>
+    
+    </body>
+</html>
