@@ -89,21 +89,27 @@ function animation(images, gl){
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
+        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
+        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
     }
 
     var e_menu = document.getElementById('effect_menu');
     var program = gl.inten_diff_program;
     var e_tag = 'e1'
+
+    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+
     e_menu.onchange = function(){
         if(e_menu.value == 'e1'){
             program = gl.inten_diff_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
+            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
         }
         if(e_menu.value == 'e2'){
             // bianca add program name
@@ -111,8 +117,7 @@ function animation(images, gl){
     }
 
     var tick = function(){
-       
-        var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+        
         render_image(gl, positionBuffer);
         requestAnimationFrame(tick);
     };
