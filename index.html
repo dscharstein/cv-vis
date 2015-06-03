@@ -52,6 +52,9 @@
             uniform int u_ImFlag1;
             uniform int u_ImFlag2;
 
+            uniform float u_Dx;
+            uniform float u_Dy;
+
             vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
             vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
 
@@ -67,7 +70,7 @@
                 }
 
                 if(u_ImFlag2 == 1){
-                    im2Color = texture2D(u_Image2, v_TexCoord - vec2(0.2, 0.0));
+                    im2Color = texture2D(u_Image2, v_TexCoord - vec2(u_Dx, u_Dy));
                     if(u_ImFlag1 == 0){
                         gl_FragColor = im2Color;
                     }
