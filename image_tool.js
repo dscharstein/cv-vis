@@ -122,12 +122,19 @@ function animation(images, gl){
     gl.canvas.onmousedown = mouse_down_handler;
     document.onmouseup = mouse_up_handler;
     document.onmousemove = mouse_move_handler;
+
+    var dx_text = document.getElementById('dx_text');
+    var dy_text = document.getElementById('dy_text');
+
     
     var mouse_down = false; // set the mouse down flag to false
-    var old_mouse_x = 0;    // set up variables to hold the mouses x and y
-    var old_mouse_y = 0;
+    var old_mouse_x = 0.0;    // set up variables to hold the mouses x and y
+    var old_mouse_y = 0.0;
     var dx = 0.0;
     var dy = 0.0;
+
+    dx_text.innerHTML = dx;
+    dy_text.innerHTML = -dy;
     
     function mouse_down_handler(event){
         mouse_down = true;  // the mouse is now down
@@ -157,13 +164,18 @@ function animation(images, gl){
 
         dy += new_mouse_y - old_mouse_y;
             
-        
+        dx_text.innerHTML = dx;
+        dy_text.innerHTML = -dy;
 
         // update the old mouse position
         old_mouse_x = new_mouse_x;
         old_mouse_y = new_mouse_y;
     }
     /********************************************/
+
+
+
+
 
     var tick = function(){
 
