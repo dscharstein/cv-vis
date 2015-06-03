@@ -22,12 +22,12 @@ window.onload = function main(){
     }*/
     
     Promise.all([ initializeTexture(gl, 0, 'images/cones1.png')])
-    .then(function () {load_image2()})
+    .then(function () {load_image2(gl)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
     
 }
 
-function load_image2(){
+function load_image2(gl){
     Promise.all([ initializeTexture(gl, 1, 'images/cones2.png')])
     .then(function () {animation(gl.images, gl);})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
@@ -57,18 +57,11 @@ function initialize() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     //gl.enable(gl.DEPTH_TEST);
     // create program with our shaders and enable it
-    gl.program = initShaders(gl, "vertex-shader", "fragment-shader");
-    gl.useProgram(gl.program);
+    gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
 
-    // init texture switching uniforms for texture
-    gl.u_Image1 = gl.getUniformLocation(gl.program, 'u_Image1');
-    gl.u_Image2 = gl.getUniformLocation(gl.program, 'u_Image2');
+    gl.useProgram(gl.inten_diff_program);
 
-    gl.uniform1i(gl.u_Image1, 0);
-    gl.uniform1i(gl.u_Image2, 1);
-
-    gl.u_ImFlag1 = gl.getUniformLocation(gl.program, 'u_ImFlag1');
-    gl.u_ImFlag2 = gl.getUniformLocation(gl.program, 'u_ImFlag2');
+    
 
     gl.images = [];
 
@@ -96,21 +89,31 @@ function animation(images, gl){
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
-        render_image(images, gl, im1flag, im2flag);
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
-        render_image(images, gl, im1flag, im2flag);
     }
 
-
-
+    var e_menu = document.getElementById('effect_menu');
+    var program = gl.inten_diff_program;
+    var e_tag = 'e1'
+    e_menu.onchange = function(){
+        if(e_menu.value == 'e1'){
+            program = gl.inten_diff_program;
+            gl.useProgram(program);
+            e_tag = e_menu.value;
+        }
+        if(e_menu.value == 'e2'){
+            // bianca add program name
+        }
+    }
 
     var tick = function(){
        
-        render_image(images, gl, im1flag, im2flag);
+        var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+        render_image(gl, positionBuffer);
         requestAnimationFrame(tick);
     };
     
@@ -123,7 +126,7 @@ function animation(images, gl){
  *return: nothing
  *draws the vertices in the array buffer
  */
-function render_image(images, gl, im1flag, im2flag){
+function setup_image(images, gl, im1flag, im2flag, e_tag, program){
 
     var image1 = images[0];
     var image2 = images[1];
@@ -131,8 +134,20 @@ function render_image(images, gl, im1flag, im2flag){
     console.log("image width: ", image.width);
     console.log("image height: ", image.height);*/
 
+    // init texture switching uniforms for texture
+    var u_Image1 = gl.getUniformLocation(program, 'u_Image1');
+    var u_Image2 = gl.getUniformLocation(program, 'u_Image2');
+
+    gl.uniform1i(u_Image1, 0);
+    gl.uniform1i(u_Image2, 1);
+
+    var u_ImFlag1 = gl.getUniformLocation(program, 'u_ImFlag1');
+    var u_ImFlag2 = gl.getUniformLocation(program, 'u_ImFlag2');
+
+    /*
     console.log("image src1: ", image1.src);
     console.log("image src2: ", image2.src);
+    */
 
     resize_canvas(gl, image1);
 
@@ -142,28 +157,50 @@ function render_image(images, gl, im1flag, im2flag){
     create_texture(gl, image1);
     create_texture(gl, image2);
 
-	create_texture_coords("a_TexCoord", gl);
+	create_texture_coords("a_TexCoord", gl, program);
 
-	var u_Resolution = gl.getUniformLocation(gl.program, "u_Resolution");
+	var u_Resolution = gl.getUniformLocation(program, "u_Resolution");
     gl.uniform2f(u_Resolution, gl.canvas.width, gl.canvas.height);
 
     //console.log("image height: ", image.height);
     var recQuad = createRec(gl, 0, 0, image1.width, image1.height);
     //console.log("recQuad: ", recQuad);
     var positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, recQuad, "positionBuffer", gl.STATIC_DRAW);
-    enableAttribute(gl, positionBuffer, "a_Position", 2, 0, 0);
+    enableAttribute(gl, program, positionBuffer, "a_Position", 2, 0, 0);
 
-    console.log("im 1 flag", im1flag);
+    //console.log("im 1 flag", im1flag);
     im1flag = (im1flag) ? 1 : 0;
     im2flag = (im2flag) ? 1 : 0;
-    console.log("im 1 flag", im1flag);
+    //console.log("im 1 flag", im1flag);
 
-    gl.uniform1i(gl.u_ImFlag1, im1flag);
-    gl.uniform1i(gl.u_ImFlag2, im2flag);
+    gl.uniform1i(u_ImFlag1, im1flag);
+    gl.uniform1i(u_ImFlag2, im2flag);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    if(e_tag == 'e1'){
+        inten_diff(gl, image1, image2);
+    }
+    if(e_tag == 'e2'){
+        kernel_conv(gl, image1, image2);
+    }
+    
+    return positionBuffer;
 
 }
+
+function render_image(gl, positionBuffer){
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+function inten_diff(gl, im1, im2){
+
+}
+
+function kernel_conv(gl, im1, im2){
+
+}
+
 
 function resize_canvas(gl, image){
     gl.canvas.width = image.width;
@@ -208,9 +245,9 @@ function createBuffer(gl, destination, data, name, type){
  * Note that this no longer fails if the attribute can't be found. It gives us a warning, but doesn't crash.
  * This will allow us to use different shaders with different attributes.
  */ 
-function enableAttribute(gl, buffer, name, size, stride, offset){
+function enableAttribute(gl, program, buffer, name, size, stride, offset){
    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-   var attribute = gl.getAttribLocation(gl.program, name);
+   var attribute = gl.getAttribLocation(program, name);
    if (attribute >= 0) {
        gl.vertexAttribPointer(attribute, size, gl.FLOAT, false, 0,0);
        gl.enableVertexAttribArray(attribute);
@@ -221,7 +258,7 @@ function enableAttribute(gl, buffer, name, size, stride, offset){
 }
 
 
-function create_texture_coords(a_TexCoord, gl){
+function create_texture_coords(a_TexCoord, gl, program){
     var texCoords = new Float32Array([
         0.0,  0.0,
         1.0,  0.0,
@@ -230,7 +267,7 @@ function create_texture_coords(a_TexCoord, gl){
         1.0,  0.0,
         1.0,  1.0]);
     var texCoordBuffer = createBuffer(gl, gl.ARRAY_BUFFER, texCoords, "textureCoordBuffer", gl.STATIC_DRAW);
-    enableAttribute(gl, texCoordBuffer, a_TexCoord, 2, 0, 0);
+    enableAttribute(gl, program, texCoordBuffer, a_TexCoord, 2, 0, 0);
 }
 
 function create_texture(gl, image){

@@ -13,7 +13,7 @@
         
         
         
-        <script id="vertex-shader" type="x-shader/x-vertex">
+        <script id="inten-diff-vertex-shader" type="x-shader/x-vertex">
             attribute vec2 a_Position;
             attribute vec2 a_TexCoord; // texture coordinate of the vertex
             uniform vec2 u_Resolution;
@@ -39,7 +39,7 @@
             }
         </script>
         
-        <script id="fragment-shader" type="x-shader/x-fragment">
+        <script id="inten-diff-fragment-shader" type="x-shader/x-fragment">
             precision highp float;
             
             //varying vec3 v_Position;
@@ -94,6 +94,13 @@
         <p>
             <input id="im1_box" type="checkbox" name="" value="point" /> Image 1
             <input id="im2_box" type="checkbox" name="point" value="point" /> Image 2
+        </p>
+
+       <p>
+            <select id="effect_menu">
+                <option value="e1">Intensity Difference</option>
+                <option value="e2">Convolution</option>
+            </select>
         </p>
     
     </body>
