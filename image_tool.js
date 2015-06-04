@@ -171,13 +171,54 @@ function animation(images, gl){
         old_mouse_x = new_mouse_x;
         old_mouse_y = new_mouse_y;
     }
-    /********************************************/
+/********************************************/
 
 
+/********************************************/
+/************ Key Press Handling ***********/
+/********************************************/
+    var moveDist = 1; //distance image will move on a key press, initialized to 1
+
+    //create "dictionary" of keys and store whether they are pressed or not
+    var pressedKeys = {};
+
+    document.onkeydown = function(event) {
+        pressedKeys[event.keyCode] = true;
+    }
+
+    document.onkeyup = function(event) {
+        pressedKeys[event.keyCode] = false;
+    }
+    
+    
+    //funtion to be called to handle key presses:
+    function handleKeys() {
+
+        //changing camera yaw:
+        if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
+            dx -= moveDist;
+        } else if (pressedKeys[68]) { //if D key is pressed, shift in pos x direction
+            dx += moveDist;
+        } 
+    
+        //moving camera forward or backward
+        if (pressedKeys[87]) { //if W key is pressed, shift in pos y direction
+            dy -= moveDist;
+        } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
+            dy += moveDist;
+        } 
+
+        dx_text.innerHTML = dx;
+        dy_text.innerHTML = -dy;
+  }
+
+/********************************************/
 
 
 
     var tick = function(){
+
+        handleKeys();
 
         var u_Dx = gl.getUniformLocation(program, 'u_Dx');
         var u_Dy = gl.getUniformLocation(program, 'u_Dy');
