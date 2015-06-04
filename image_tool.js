@@ -89,30 +89,143 @@ function animation(images, gl){
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
+        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
+        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
     }
 
     var e_menu = document.getElementById('effect_menu');
     var program = gl.inten_diff_program;
     var e_tag = 'e1'
+
+    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+
     e_menu.onchange = function(){
         if(e_menu.value == 'e1'){
             program = gl.inten_diff_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
+            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
         }
         if(e_menu.value == 'e2'){
             // bianca add program name
         }
     }
 
+    /********************************************/
+    /*************** Mouse Handler **************/
+    /********************************************/
+    gl.canvas.onmousedown = mouse_down_handler;
+    document.onmouseup = mouse_up_handler;
+    document.onmousemove = mouse_move_handler;
+
+    var dx_text = document.getElementById('dx_text');
+    var dy_text = document.getElementById('dy_text');
+
+    
+    var mouse_down = false; // set the mouse down flag to false
+    var old_mouse_x = 0.0;    // set up variables to hold the mouses x and y
+    var old_mouse_y = 0.0;
+    var dx = 0.0;
+    var dy = 0.0;
+
+    dx_text.innerHTML = dx;
+    dy_text.innerHTML = -dy;
+    
+    function mouse_down_handler(event){
+        mouse_down = true;  // the mouse is now down
+        old_mouse_x = event.clientX;    // get the mouse x and y
+        old_mouse_y = event.clientY;
+    }
+
+    function mouse_up_handler(event){
+        mouse_down = false; // the mouse is now up
+    }
+    
+    function mouse_move_handler(event){
+        if (!mouse_down) {  // if the mouse isn't down
+                    // do nothing
+            return;
+        }
+        // while the mouse is down keep updating
+        // the variables storing the mouse's location
+        var new_mouse_x = event.clientX;
+        var new_mouse_y = event.clientY;
+        
+        // calculate the difference between the last mouse position
+        // and the new and use it as the amount to rotate the mesh
+        // the rotation is broken down into its x and y components
+        // for simplicity
+        dx += new_mouse_x - old_mouse_x;
+
+        dy += new_mouse_y - old_mouse_y;
+            
+        dx_text.innerHTML = dx;
+        dy_text.innerHTML = -dy;
+
+        // update the old mouse position
+        old_mouse_x = new_mouse_x;
+        old_mouse_y = new_mouse_y;
+    }
+/********************************************/
+
+
+/********************************************/
+/************ Key Press Handling ***********/
+/********************************************/
+    var moveDist = 1; //distance image will move on a key press, initialized to 1
+
+    //create "dictionary" of keys and store whether they are pressed or not
+    var pressedKeys = {};
+
+    document.onkeydown = function(event) {
+        pressedKeys[event.keyCode] = true;
+    }
+
+    document.onkeyup = function(event) {
+        pressedKeys[event.keyCode] = false;
+    }
+    
+    
+    //funtion to be called to handle key presses:
+    function handleKeys() {
+
+        //changing camera yaw:
+        if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
+            dx -= moveDist;
+        } else if (pressedKeys[68]) { //if D key is pressed, shift in pos x direction
+            dx += moveDist;
+        } 
+    
+        //moving camera forward or backward
+        if (pressedKeys[87]) { //if W key is pressed, shift in pos y direction
+            dy -= moveDist;
+        } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
+            dy += moveDist;
+        } 
+
+        dx_text.innerHTML = dx;
+        dy_text.innerHTML = -dy;
+  }
+
+/********************************************/
+
+
+
     var tick = function(){
-       
-        var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+
+        handleKeys();
+
+        var u_Dx = gl.getUniformLocation(program, 'u_Dx');
+        var u_Dy = gl.getUniformLocation(program, 'u_Dy');
+
+        gl.uniform1f(u_Dx, dx / images[0].width );
+        gl.uniform1f(u_Dy, -(dy / images[0].height) );        
+
         render_image(gl, positionBuffer);
         requestAnimationFrame(tick);
     };

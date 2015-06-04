@@ -7,7 +7,8 @@
         <script type="text/javascript" src="lib/MV.js"></script>
         <script type="text/javascript" src="lib/InitShaders.js"></script>
         
-        
+        <link rel="stylesheet" type="text/css" href="assets/style/main-style.css" />
+
         <script type="text/javascript" src="image_tool.js"></script>
         
         
@@ -49,6 +50,12 @@
             uniform int u_ImFlag1;
             uniform int u_ImFlag2;
 
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            vec2 uv_1;
+            vec2 uv_2;
+
             vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
             vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
 
@@ -64,14 +71,20 @@
                 }
 
                 if(u_ImFlag2 == 1){
-                    im2Color = texture2D(u_Image2, v_TexCoord - vec2(0.2, 0.0));
+                    uv_2 = v_TexCoord - vec2(u_Dx, u_Dy);
+                    if(uv_2.x >= 0.0 && uv_2.x <= 1.0 && uv_2.y >= 0.0 && uv_2.y <= 1.0){
+                        im2Color = texture2D(u_Image2, uv_2);
+                    }else{
+                        im2Color = vec4(1.0,1.0,1.0,1.0);
+                    }
+                    
                     if(u_ImFlag1 == 0){
                         gl_FragColor = im2Color;
                     }
                 }
 
                 if(u_ImFlag1 == 1 && u_ImFlag2 == 1){
-                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb) + 1.0) / 2.0, 1.0);
+                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb) / 2.0) + 0.5, 1.0);
                 }
 
                 if(u_ImFlag1 == 0 && u_ImFlag2 == 0){
@@ -82,8 +95,12 @@
         </script>
 
     </head>
-    <body style="margin: 0; padding: 0;">
-
+    <body>
+        <div>
+            <p id="dxdy_text">
+                offset &gt&gt dx: <span id="dx_text"></span> dy: <span id ="dy_text"></span>
+            </p>
+        </div>
         <canvas id="gl-canvas" width="400" height="300">
             You need a better web browser
         </canvas>
@@ -97,6 +114,10 @@
                 <option value="e1">Intensity Difference</option>
                 <option value="e2">Convolution</option>
             </select>
+        </p>
+
+        <p>
+            WASD or click & drag to shift image
         </p>
     
     </body>
