@@ -181,6 +181,7 @@ function animation(images, gl){
 /************ Key Press Handling ***********/
 /********************************************/
     var moveDist = 1; //distance image will move on a key press, initialized to 1
+    var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
 
     //create "dictionary" of keys and store whether they are pressed or not
     var pressedKeys = {};
@@ -198,11 +199,11 @@ function animation(images, gl){
     function handleKeys() {
 
         if (pressedKeys[69] && moveDist <= 2) { //speed up motion if q key pressed
-            moveDist = moveDist*1.01;
+            moveDist = moveDist*1.05;
         } 
 
-        if (pressedKeys[81] && moveDist >= 0.1) { //slow down motion if e key pressed
-            moveDist = moveDist * 0.99;
+        if (pressedKeys[81] && moveDist >= 0.05) { //slow down motion if e key pressed
+            moveDist = moveDist * 0.95;
             console.log("speed-", moveDist);
         } 
 
@@ -221,6 +222,13 @@ function animation(images, gl){
                 dy += moveDist;
         } }
 
+        if (pressedKeys[90] && s_val >= 0.5) { //if Z key is pressed, decrease s_val
+            s_val -= 0.025;
+        } 
+        else if (pressedKeys[88] && s_val <= 4) { //if X key is pressed, increase s_val
+            s_val += 0.025;
+        } 
+
         dx_text.innerHTML = dx;
         dy_text.innerHTML = -dy;
   }
@@ -235,9 +243,11 @@ function animation(images, gl){
 
         var u_Dx = gl.getUniformLocation(program, 'u_Dx');
         var u_Dy = gl.getUniformLocation(program, 'u_Dy');
+        var u_S = gl.getUniformLocation(program, 'u_S');
 
         gl.uniform1f(u_Dx, dx / images[0].width );
-        gl.uniform1f(u_Dy, -(dy / images[0].height) );        
+        gl.uniform1f(u_Dy, -(dy / images[0].height) );     
+        gl.uniform1f(u_S, s_val);   
 
         render_image(gl, positionBuffer);
         requestAnimationFrame(tick);
