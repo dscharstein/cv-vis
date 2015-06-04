@@ -198,7 +198,6 @@ function inten_diff(gl, im1, im2){
 }
 
 function kernel_conv(gl, im1, im2){
-
 }
 
 
