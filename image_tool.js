@@ -195,7 +195,7 @@ function animation(images, gl){
     //funtion to be called to handle key presses:
     function handleKeys() {
         //change motion speed:
-        if (pressedKeys[69] && moveDist <= 2) { //speed up motion if q key pressed
+        if (pressedKeys[69] && moveDist <= 3) { //speed up motion if q key pressed
             moveDist = moveDist+.05;
         } 
 
@@ -224,6 +224,12 @@ function animation(images, gl){
         } 
         else if (pressedKeys[88] && s_val <= 4) { //if X key is pressed, increase s_val
             s_val += 0.025;
+        } 
+
+        //reset image position
+        if (pressedKeys[82]) { //if R is pressed, reset position of top image
+            dx = 0;
+            dy = 0;
         } 
 
         //set displayed text to match current dx/dy
