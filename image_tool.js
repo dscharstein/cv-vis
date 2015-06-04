@@ -162,7 +162,10 @@ function animation(images, gl){
         // for simplicity
         dx += new_mouse_x - old_mouse_x;
 
-        dy += new_mouse_y - old_mouse_y;
+        //shift button to lock all motion to horizontal:
+        if (!pressedKeys[16]) { //if shift button is not being pressed, change in y direction
+            dy += new_mouse_y - old_mouse_y;
+        } 
             
         dx_text.innerHTML = dx;
         dy_text.innerHTML = -dy;
@@ -194,19 +197,29 @@ function animation(images, gl){
     //funtion to be called to handle key presses:
     function handleKeys() {
 
-        //changing camera yaw:
+        if (pressedKeys[69] && moveDist <= 2) { //speed up motion if q key pressed
+            moveDist = moveDist*1.01;
+        } 
+
+        if (pressedKeys[81] && moveDist >= 0.1) { //slow down motion if e key pressed
+            moveDist = moveDist * 0.99;
+            console.log("speed-", moveDist);
+        } 
+
+        //horizontal motion key control:
         if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
             dx -= moveDist;
         } else if (pressedKeys[68]) { //if D key is pressed, shift in pos x direction
             dx += moveDist;
         } 
     
-        //moving camera forward or backward
-        if (pressedKeys[87]) { //if W key is pressed, shift in pos y direction
-            dy -= moveDist;
-        } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
-            dy += moveDist;
-        } 
+        //vertical motion key control
+        if (!pressedKeys[16]) { //only move vertically if shift key is not pressed
+            if (pressedKeys[87]) { //if W key is pressed, shift in pos y direction
+                dy -= moveDist;
+            } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
+                dy += moveDist;
+        } }
 
         dx_text.innerHTML = dx;
         dy_text.innerHTML = -dy;
