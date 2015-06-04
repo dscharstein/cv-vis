@@ -53,6 +53,8 @@
             uniform float u_Dx;
             uniform float u_Dy;
 
+            uniform float u_S; //adjusts level of detail that shows up
+
             vec2 uv_1;
             vec2 uv_2;
 
@@ -84,7 +86,7 @@
                 }
 
                 if(u_ImFlag1 == 1 && u_ImFlag2 == 1){
-                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb) / 2.0) + 0.5, 1.0);
+                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb )* u_S) + 0.5, 1.0);
                 }
 
                 if(u_ImFlag1 == 0 && u_ImFlag2 == 0){
@@ -116,11 +118,12 @@
             </select>
         </p>
 
-        <p>
-            WASD or click & drag to shift image
-            q: slow down image motion      e: speed up image motion
-            shift: lock image motion to x direction only
-        </p>
+        <pre>
+        <center>
+<strong>WASD</strong> or <strong>click & drag</strong> to shift image                                     <strong>shift:</strong> lock image motion to x direction only
+<strong>q:</strong> slow down image motion                                               <strong>e:</strong> speed up image motion
+       </center> 
+        </pre>
     
     </body>
 </html>
