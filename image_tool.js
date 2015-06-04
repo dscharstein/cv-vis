@@ -166,9 +166,6 @@ function animation(images, gl){
         if (!pressedKeys[16]) { //if shift button is not being pressed, change in y direction
             dy += new_mouse_y - old_mouse_y;
         } 
-            
-        dx_text.innerHTML = dx;
-        dy_text.innerHTML = -dy;
 
         // update the old mouse position
         old_mouse_x = new_mouse_x;
@@ -180,7 +177,7 @@ function animation(images, gl){
 /********************************************/
 /************ Key Press Handling ***********/
 /********************************************/
-    var moveDist = 1; //distance image will move on a key press, initialized to 1
+    var moveDist = 1; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
 
     //create "dictionary" of keys and store whether they are pressed or not
@@ -197,14 +194,13 @@ function animation(images, gl){
     
     //funtion to be called to handle key presses:
     function handleKeys() {
-
+        //change motion speed:
         if (pressedKeys[69] && moveDist <= 2) { //speed up motion if q key pressed
-            moveDist = moveDist*1.05;
+            moveDist = moveDist+.05;
         } 
 
         if (pressedKeys[81] && moveDist >= 0.05) { //slow down motion if e key pressed
-            moveDist = moveDist * 0.95;
-            console.log("speed-", moveDist);
+            moveDist = moveDist-0.05;
         } 
 
         //horizontal motion key control:
@@ -222,6 +218,7 @@ function animation(images, gl){
                 dy += moveDist;
         } }
 
+        //change s_val for textures to show up more or less boldly
         if (pressedKeys[90] && s_val >= 0.5) { //if Z key is pressed, decrease s_val
             s_val -= 0.025;
         } 
@@ -229,12 +226,12 @@ function animation(images, gl){
             s_val += 0.025;
         } 
 
-        dx_text.innerHTML = dx;
-        dy_text.innerHTML = -dy;
+        //set displayed text to match current dx/dy
+        dx_text.innerHTML = dx.toFixed(4);
+        dy_text.innerHTML = (-dy).toFixed(4);
   }
 
 /********************************************/
-
 
 
     var tick = function(){
