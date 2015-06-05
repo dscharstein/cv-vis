@@ -237,6 +237,10 @@ function animation(images, gl){
             dx = 0;
             dy = 0;
         } 
+        /*
+        if (pressedKeys[82] && pressedKeys[16]){
+
+        }*/
 
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
@@ -459,6 +463,7 @@ function create_texture_from_array (gl, data, type, format, width, height, textu
     gl.getExtension("OES_texture_float");
 
     var dataTexture = gl.createTexture();
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
     gl.activeTexture(gl.TEXTURE0 + textureid);
     gl.bindTexture(gl.TEXTURE_2D, dataTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height,0, format, type, new Float32Array(data));
@@ -487,7 +492,6 @@ function initializeTexture(gl, textureid, filename) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
             gl.images.push(image);
             
             
