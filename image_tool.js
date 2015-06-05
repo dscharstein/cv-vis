@@ -58,12 +58,14 @@ function initialize() {
     //gl.enable(gl.DEPTH_TEST);
     // create program with our shaders and enable it
     gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
-    gl.useProgram(gl.inten_diff_program);
+    //gl.useProgram(gl.inten_diff_program);
 
 
     //**********************************************************************************************************************
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
     //gl.useProgram(gl.kernel_conv_program);
+
+    gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
 
     gl.images = [];
 
@@ -101,12 +103,10 @@ function animation(images, gl){
     }
 
     var e_menu = document.getElementById('effect_menu');
-    var program = gl.inten_diff_program;
-    var e_tag = 'e1'
+    var program;
+    var e_tag;
 
-    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
-
-    e_menu.onchange = function(){
+    program_select = function(){
         if(e_menu.value == 'e1'){
             program = gl.inten_diff_program;
             gl.useProgram(program);
@@ -114,13 +114,28 @@ function animation(images, gl){
             positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
         }
         if(e_menu.value == 'e2'){
-            // bianca add program name
             program = gl.kernel_conv_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
             positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
         }
+        if(e_menu.value == 'e3'){
+            program = gl.black_white_program;
+            gl.useProgram(program);
+            e_tag = e_menu.value;
+            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+        }
     }
+
+    program_select();
+
+    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+
+    e_menu.onchange = function(){
+        program_select();
+    }
+
+
 
     /********************************************/
     /*************** Mouse Handler **************/
@@ -332,7 +347,10 @@ function setup_image(images, gl, im1flag, im2flag, e_tag, program){
         inten_diff(gl, image1, image2);
     }
     if(e_tag == 'e2'){
-        kernel_conv(gl, image1, image2, 1, 3);
+        kernel_conv(gl, image1, image2, 3, 3);
+    }
+    if(e_tag == 'e2'){
+        black_white(gl, image1, image2);
     }
     
     return positionBuffer;
@@ -347,6 +365,10 @@ function render_image(gl, positionBuffer){
 
 function inten_diff(gl, im1, im2){
 
+}
+
+function black_white(gl, im1, im2){
+    
 }
 
 //sets up/passes to shaders extra variables needed to do a convolution
@@ -405,7 +427,7 @@ function kernel_conv(gl, im1, im2, rows, cols){
         2.0, 0.0, 0.0
     ];
 
-        create_texture_from_array(gl, data, gl.FLOAT, gl.RGB, cols, rows, 2);
+        create_texture_from_array(gl, emboss, gl.FLOAT, gl.RGB, cols, rows, 2);
 }
 
 
