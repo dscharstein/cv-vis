@@ -124,13 +124,13 @@ function animation(gl){
             program = gl.black_white_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
-            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
         }
     }
 
     program_select();
 
-    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+    var positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
 
     e_menu.onchange = function(){
         program_select();
