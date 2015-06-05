@@ -58,10 +58,12 @@ function initialize() {
     //gl.enable(gl.DEPTH_TEST);
     // create program with our shaders and enable it
     gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
-
     gl.useProgram(gl.inten_diff_program);
 
-    
+
+    //**********************************************************************************************************************
+    gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
+    //gl.useProgram(gl.kernel_conv_program);
 
     gl.images = [];
 
@@ -113,6 +115,10 @@ function animation(images, gl){
         }
         if(e_menu.value == 'e2'){
             // bianca add program name
+            program = gl.kernel_conv_program;
+            gl.useProgram(program);
+            e_tag = e_menu.value;
+            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
         }
     }
 
@@ -319,7 +325,7 @@ function setup_image(images, gl, im1flag, im2flag, e_tag, program){
         inten_diff(gl, image1, image2);
     }
     if(e_tag == 'e2'){
-        kernel_conv(gl, image1, image2);
+        kernel_conv(gl, image1, image2, 3, 2);
     }
     
     return positionBuffer;
@@ -336,7 +342,30 @@ function inten_diff(gl, im1, im2){
 
 }
 
-function kernel_conv(gl, im1, im2){
+//sets up/passes to shaders extra variables needed to do a convolution
+function kernel_conv(gl, im1, im2, rows, cols){
+
+    var u_Kernel = gl.getUniformLocation(gl.kernel_conv_program, 'u_Kernel');
+    gl.uniform1i(u_Kernel, 2);
+    /*
+    var u_Rows = gl.getUniformLocation(gl.kernel_conv_program, 'u_KernelRow');
+    gl.uniform1f(u_Rows, rows);
+    var u_Cols = gl.getUniformLocation(gl.kernel_conv_program, 'u_KernelCol');
+    gl.uniform1f(u_Cols, cols);
+    */
+    var u_KRes = gl.getUniformLocation(gl.kernel_conv_program, 'u_KRes');
+    gl.uniform2f(u_KRes, cols, rows);
+
+    var data = [
+        0.0, 0.5, 0.0,
+        0.0, 0.0, 0.5,
+        0.5, 0.0, 0.0,
+        0.5, 0.5, 0.0, 
+        0.5, 0.0, 0.5,
+        0.5, 0.5, 0.5
+        ];
+
+        create_texture_from_array(gl, data, gl.FLOAT, gl.RGB, cols, rows, 2);
 }
 
 
@@ -425,6 +454,22 @@ function create_texture(gl, image){
     return texture;
 }
 
+function create_texture_from_array (gl, data, type, format, width, height, textureid){
+
+    gl.getExtension("OES_texture_float");
+
+    var dataTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + textureid);
+    gl.bindTexture(gl.TEXTURE_2D, dataTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height,0, format, type, new Float32Array(data));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    
+}
+
+
 function initializeTexture(gl, textureid, filename) {
     
     return new Promise(function(resolve, reject){
@@ -442,8 +487,7 @@ function initializeTexture(gl, textureid, filename) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-
-
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
             gl.images.push(image);
             
             
