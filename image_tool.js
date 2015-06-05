@@ -238,7 +238,6 @@ function animation(gl){
             dy = 0;
         } 
         
-
         //reset all controls
         //shift-r
         if (pressedKeys[82] && pressedKeys[16]){
@@ -336,7 +335,7 @@ function setup_image(gl, im1flag, im2flag, e_tag, program){
         inten_diff(gl, image1, image2);
     }
     if(e_tag == 'e2'){
-        kernel_conv(gl, image1, image2, 3, 2);
+        kernel_conv(gl, image1, image2, 1, 3);
     }
     
     return positionBuffer;
@@ -368,13 +367,46 @@ function kernel_conv(gl, im1, im2, rows, cols){
     gl.uniform2f(u_KRes, cols, rows);
 
     var data = [
-        0.0, 0.5, 0.0,
-        0.0, 0.0, 0.5,
-        0.5, 0.0, 0.0,
-        0.5, 0.5, 0.0, 
-        0.5, 0.0, 0.5,
-        0.5, 0.5, 0.5
+        0.0, 0.75, 0.0,
+        0.0, 0.0, 0.0,
+        0.75, 0.0, 0.0
+    ];
+
+    var data1 = [
+        0.0625, 0.0, 0.0,
+        0.125, 0.0, 0.0,
+        0.0625, 0.0, 0.0,
+        0.125, 0.0, 0.0,
+        0.25, 0.0, 0.0,
+        0.125, 0.0, 0.0,
+        0.0625, 0.0, 0.0,
+        0.125, 0.0, 0.0,
+        0.0625, 0.0, 0.0
         ];
+
+    var gaussianblur = [
+        0.045, 0.0, 0.0,
+        0.122, 0.0, 0.0,
+        0.045, 0.0, 0.0,
+        0.122, 0.0, 0.0,
+        0.332, 0.0, 0.0,
+        0.122, 0.0, 0.0,
+        0.045, 0.0, 0.0,
+        0.122, 0.0, 0.0,
+        0.045, 0.0, 0.0
+    ];
+
+       var emboss = [
+        0.0, 2.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        2.0, 0.0, 0.0
+    ];
 
         create_texture_from_array(gl, data, gl.FLOAT, gl.RGB, cols, rows, 2);
 }
