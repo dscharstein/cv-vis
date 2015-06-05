@@ -21,15 +21,15 @@ window.onload = function main(){
         render_image(image, gl);
     }*/
     
-    Promise.all([ initializeTexture(gl, 0, 'images/cones1.png')])
+    Promise.all([ read_image(gl, 0, 'images/cones1.png')])
     .then(function () {load_image2(gl)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
     
 }
 
 function load_image2(gl){
-    Promise.all([ initializeTexture(gl, 1, 'images/cones2.png')])
-    .then(function () {animation(gl.images, gl);})
+    Promise.all([ read_image(gl, 1, 'images/cones2.png')])
+    .then(function () {animation(gl);})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
 }
 
@@ -65,7 +65,7 @@ function initialize() {
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
     //gl.useProgram(gl.kernel_conv_program);
 
-    gl.images = [];
+    gl.images = {};
 
     // create the current transform and the matrix stack right in th gl object
     gl.currentTransform = mat4();
@@ -83,7 +83,7 @@ function initialize() {
     return gl;
 }
 
-function animation(images, gl){
+function animation(gl){
 
     var im1_box = document.getElementById('im1_box');
     var im2_box = document.getElementById('im2_box');
@@ -91,34 +91,34 @@ function animation(images, gl){
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
-        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+        positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
-        positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+        positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
     }
 
     var e_menu = document.getElementById('effect_menu');
     var program = gl.inten_diff_program;
     var e_tag = 'e1'
 
-    var positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+    var positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
 
     e_menu.onchange = function(){
         if(e_menu.value == 'e1'){
             program = gl.inten_diff_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
-            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
         }
         if(e_menu.value == 'e2'){
             // bianca add program name
             program = gl.kernel_conv_program;
             gl.useProgram(program);
             e_tag = e_menu.value;
-            positionBuffer = setup_image(images, gl, im1flag, im2flag, e_tag, program);
+            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
         }
     }
 
@@ -262,8 +262,8 @@ function animation(images, gl){
         var u_Dy = gl.getUniformLocation(program, 'u_Dy');
         var u_S = gl.getUniformLocation(program, 'u_S');
 
-        gl.uniform1f(u_Dx, dx / images[0].width );
-        gl.uniform1f(u_Dy, -(dy / images[0].height) );     
+        gl.uniform1f(u_Dx, dx / gl.images["image0"].width );
+        gl.uniform1f(u_Dy, -(dy / gl.images["image0"].height) );     
         gl.uniform1f(u_S, s_val);   
 
         render_image(gl, positionBuffer);
@@ -279,13 +279,16 @@ function animation(images, gl){
  *return: nothing
  *draws the vertices in the array buffer
  */
-function setup_image(images, gl, im1flag, im2flag, e_tag, program){
+function setup_image(gl, im1flag, im2flag, e_tag, program){
 
-    var image1 = images[0];
-    var image2 = images[1];
+    var image1 = gl.images["image0"];
+    var image2 = gl.images["image1"];
     /*console.log("inside render_image");
     console.log("image width: ", image.width);
     console.log("image height: ", image.height);*/
+
+    console.log(gl.images["image0"]);
+    console.log(gl.images["image1"]);
 
     // init texture switching uniforms for texture
     var u_Image1 = gl.getUniformLocation(program, 'u_Image1');
@@ -307,8 +310,8 @@ function setup_image(images, gl, im1flag, im2flag, e_tag, program){
     gl.clear(gl.COLOR_BUFFER_BIT);
 
 
-    create_texture(gl, image1);
-    create_texture(gl, image2);
+    var image1_tex = create_texture(gl, image1, 0);
+    var image2_tex = create_texture(gl, image2, 1);
 
 	create_texture_coords("a_TexCoord", gl, program);
 
@@ -445,19 +448,20 @@ function create_texture_coords(a_TexCoord, gl, program){
     enableAttribute(gl, program, texCoordBuffer, a_TexCoord, 2, 0, 0);
 }
 
-function create_texture(gl, image){
+function create_texture(gl, image, textureid){
     var texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
 
     // creating the texture so that we can use any sized image
     // (i.e. the width and height may not be powers of 2)
     // as a result unable to use features such as mip-mapping
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.activeTexture(gl.TEXTURE0 + textureid);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 
     return texture;
 }
@@ -475,6 +479,8 @@ function create_texture_from_array (gl, data, type, format, width, height, textu
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    return dataTexture;
     
 }
 
@@ -499,6 +505,28 @@ function initializeTexture(gl, textureid, filename) {
             gl.images.push(image);
             
             
+            resolve();
+        }
+        
+        image.onerror = function(error){
+            reject(Error(filename));
+        }
+    
+        image.src = filename; 
+    });
+}
+
+function read_image(gl, image_id, filename) {
+    
+    return new Promise(function(resolve, reject){
+        var image = new Image();
+        
+    
+        image.onload = function(){
+
+            //image.name = filename;
+            gl.images["image"+image_id] = image;
+                        
             resolve();
         }
         
