@@ -237,10 +237,14 @@ function animation(images, gl){
             dx = 0;
             dy = 0;
         } 
-        /*
-        if (pressedKeys[82] && pressedKeys[16]){
+        
 
-        }*/
+        //reset all controls
+        //shift-r
+        if (pressedKeys[82] && pressedKeys[16]){
+            moveDist = 1;
+            s_val = 0.75;
+        }
 
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
