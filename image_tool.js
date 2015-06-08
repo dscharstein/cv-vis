@@ -1,32 +1,39 @@
 /*
-*	M. Stanley
-*   B. Messner
-*	Image Processing and Visualization Tool
-*  
-*	2015-06-02
-*/
+ *	M. Stanley
+ *  B. Messner
+ *	Image Processing and Visualization Tool
+ *  
+ *	2015-06-02
+ */
 
 var im_name = "cones.png";
 
 
-//function that is called when the window is loaded
-//finds the texture and calls the draw function
+/*
+ * function that is called when the window is loaded
+ * loads image 1 and then calls the function to load 
+ * image 2
+ */
 window.onload = function main(){
-    gl = initialize();
 
-    /*
-    var image = new Image();
-    image.src = "images/" + im_name;
-    image.onload = function() {
-        render_image(image, gl);
-    }*/
+    // initialize the gl object 
+    gl = initialize_gl();
     
+    // load the first image asynchronously using a promise
+    // the image loaded from this is stored with image id 0
+    // on success this will try to load image 2
     Promise.all([ read_image(gl, 0, 'images/cones1.png')])
     .then(function () {load_image2(gl)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
     
 }
 
+/*
+ * loads in image 2 of the stereo pair, this
+ * is done asynchronously using a promise object
+ * on success this function will call the main animation
+ * loop, otherwise it will throw an error 
+ */
 function load_image2(gl){
     Promise.all([ read_image(gl, 1, 'images/cones2.png')])
     .then(function () {animation(gl);})
@@ -37,7 +44,7 @@ function load_image2(gl){
  *  regular old initilaization method, sets up the canvas
  *  and gl objects, also initializes various matrices and uniforms
  */
-function initialize() {
+function initialize_gl() {
     var canvas = document.getElementById('gl-canvas');
     
     // Use webgl-util.js to make sure we get a WebGL context
@@ -55,20 +62,22 @@ function initialize() {
     gl.viewport(0,0, gl.canvas.width, gl.canvas.height);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    //gl.enable(gl.DEPTH_TEST);
-    // create program with our shaders and enable it
+
+    // create program with our shaders and store a reference to them 
+    // in the gl object
     gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
-    //gl.useProgram(gl.inten_diff_program);
-
-
-    //**********************************************************************************************************************
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
-    //gl.useProgram(gl.kernel_conv_program);
-
     gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
 
+    // dictionary to hold image objects once they have been loaded
+    // images are stored with an id, e.g. the first image is stored with
+    // the key "image0"
     gl.images = {};
 
+    gl.textures = {};
+
+    // variable to hold the shader that is currently being used
+    gl.current_program;
 
     // create the current transform and the matrix stack right in th gl object
     gl.currentTransform = mat4();
@@ -86,54 +95,77 @@ function initialize() {
     return gl;
 }
 
+/*
+ * main animation function, this function loops  
+ * and updates gl and the canvas based on user interaction
+ * 
+ * 
+ */
 function animation(gl){
 
+
+    // initialize the textures and image quad
+    initialize();
+
+    // checkboxes that control which image is displayed
     var im1_box = document.getElementById('im1_box');
     var im2_box = document.getElementById('im2_box');
 
+    
+    // dropdown menu to control which visualization is
+    // currently running
+    var e_menu = document.getElementById('effect_menu');
+    var e_tag;
+
+    // fucntion used to change visualizations
+    // when a different visualization is selected
+    // form the dropdown menu
+    program_select = function(){
+        if(e_menu.value == 'e1'){
+            test_ping_pong(gl);
+            switch_shader(gl, gl.inten_diff_program);
+            inten_diff(gl, gl.textures["im1_alter2"], gl.textures["im2_alter2"]);
+            gl.current_program = gl.inten_diff_program;
+        }
+        if(e_menu.value == 'e2'){
+            switch_shader(gl, gl.kernel_conv_program);
+            kernel_conv(gl, gl.images["image0"], gl.images["image1"], 1, 3);
+            gl.current_program = gl.kernel_conv_program
+        }
+        /*
+        if(e_menu.value == 'e3'){
+            program = gl.black_white_program;
+            gl.useProgram(program);
+            e_tag = e_menu.value;
+            positionBuffer = setup_image(gl, program);
+        }*/
+    }
+
+    program_select();
+
+    e_menu.onchange = function(){
+        program_select();
+    }
+
+
+    // handle which of the two images is displayed
+    // using the input from the checkboxes
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
-        positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
+        // convert the boolean to an int to send to the shader
+        im1flag = (im1flag) ? 1 : 0;
+        var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
+        gl.uniform1i(u_ImFlag1, im1flag);
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
-        positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
-    }
-
-    var e_menu = document.getElementById('effect_menu');
-    var program;
-    var e_tag;
-
-    program_select = function(){
-        if(e_menu.value == 'e1'){
-            program = gl.inten_diff_program;
-            gl.useProgram(program);
-            e_tag = e_menu.value;
-            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
-        }
-        if(e_menu.value == 'e2'){
-            program = gl.kernel_conv_program;
-            gl.useProgram(program);
-            e_tag = e_menu.value;
-            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
-        }
-        if(e_menu.value == 'e3'){
-            program = gl.black_white_program;
-            gl.useProgram(program);
-            e_tag = e_menu.value;
-            positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
-        }
-    }
-
-    program_select();
-
-    var positionBuffer = setup_image(gl, im1flag, im2flag, e_tag, program);
-
-    e_menu.onchange = function(){
-        program_select();
+        // convert the boolean to an int to send to the shader
+        im2flag = (im2flag) ? 1 : 0;
+        var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
+        gl.uniform1i(u_ImFlag2, im2flag);
     }
 
 
@@ -193,12 +225,12 @@ function animation(gl){
         old_mouse_x = new_mouse_x;
         old_mouse_y = new_mouse_y;
     }
-/********************************************/
+    /********************************************/
 
 
-/********************************************/
-/************ Key Press Handling ***********/
-/********************************************/
+    /********************************************/
+    /************ Key Press Handling ***********/
+    /********************************************/
     var moveDist = 1; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
 
@@ -238,7 +270,8 @@ function animation(gl){
                 dy -= moveDist;
             } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
                 dy += moveDist;
-        } }
+            } 
+        }
 
         //change s_val for textures to show up more or less boldly
         if (pressedKeys[90] && s_val >= 0.5) { //if Z key is pressed, decrease s_val
@@ -264,24 +297,25 @@ function animation(gl){
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
         dy_text.innerHTML = (-dy).toFixed(4);
-  }
+    }
 
-/********************************************/
+    /********************************************/
 
 
+    // main animation loop
     var tick = function(){
 
         handleKeys();
 
-        var u_Dx = gl.getUniformLocation(program, 'u_Dx');
-        var u_Dy = gl.getUniformLocation(program, 'u_Dy');
-        var u_S = gl.getUniformLocation(program, 'u_S');
+        var u_Dx = gl.getUniformLocation(gl.current_program, 'u_Dx');
+        var u_Dy = gl.getUniformLocation(gl.current_program, 'u_Dy');
+        var u_S = gl.getUniformLocation(gl.current_program, 'u_S');
 
         gl.uniform1f(u_Dx, dx / gl.images["image0"].width );
         gl.uniform1f(u_Dy, -(dy / gl.images["image0"].height) );     
         gl.uniform1f(u_S, s_val);   
 
-        render_image(gl, positionBuffer);
+        render_image(gl);
         requestAnimationFrame(tick);
     };
     
@@ -289,21 +323,71 @@ function animation(gl){
 
 }
 
+
+function test_ping_pong(gl){
+    switch_shader(gl, gl.black_white_program);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    switch_shader(gl, gl.kernel_conv_program);
+    gl.textures["im2_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+
+    switch_shader(gl, gl.black_white_program);
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
+    switch_shader(gl, gl.kernel_conv_program);
+    gl.textures["im1_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
+}
+
+
 /*
- *param: takes the gl context as a parameter
- *return: nothing
- *draws the vertices in the array buffer
+ * creates image textures, sets the canvas to the 
+ * appropriate size, and creates the quad on which
+ * the images will be rendered
  */
-function setup_image(gl, im1flag, im2flag, e_tag, program){
+function initialize(){
 
     var image1 = gl.images["image0"];
     var image2 = gl.images["image1"];
-    /*console.log("inside render_image");
-    console.log("image width: ", image.width);
-    console.log("image height: ", image.height);*/
 
-    console.log(gl.images["image0"]);
-    console.log(gl.images["image1"]);
+    resize_canvas(gl, image1);
+
+    var image1_tex = create_texture(gl, image1, 0, image1.width, image1.height);
+    var image2_tex = create_texture(gl, image2, 1, image2.width, image2.height);
+
+    gl.textures["orig_image1"] = image1_tex;
+    gl.textures["orig_image2"] = image2_tex;
+
+    create_image_plane(image1.width, image1.height);
+
+    gl.textures["im1_alter1"] = create_texture(gl, null, 3, image1.width, image1.height);
+    gl.textures["im1_alter2"] = create_texture(gl, null, 4, image1.width, image1.height);
+
+    gl.textures["im2_alter1"] = create_texture(gl, null, 5, image2.width, image2.height);
+    gl.textures["im2_alter2"] = create_texture(gl, null, 6, image2.width, image2.height);
+}
+
+/*
+ * creates the quad that will display the images
+ * the position data of the vertices of the quad
+ * are buffered into a position buffer which is then 
+ * stored in the gl object => gl.positionBuffer
+ */
+function create_image_plane(width, height){
+    var recQuad = createRec(gl, 0, 0, width, height);
+    gl.positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, recQuad, "positionBuffer", gl.STATIC_DRAW);
+}
+
+
+/*
+ * given a shader program and the gl object
+ * initializes the basic uniforms and attributes
+ * belonging to that shader:
+ * 
+ * image samplers
+ * texture coordinates
+ * position attribute
+ * and image resolution
+ *
+ */
+function initialize_shader(gl, program){
 
     // init texture switching uniforms for texture
     var u_Image1 = gl.getUniformLocation(program, 'u_Image1');
@@ -312,87 +396,75 @@ function setup_image(gl, im1flag, im2flag, e_tag, program){
     gl.uniform1i(u_Image1, 0);
     gl.uniform1i(u_Image2, 1);
 
-    var u_ImFlag1 = gl.getUniformLocation(program, 'u_ImFlag1');
-    var u_ImFlag2 = gl.getUniformLocation(program, 'u_ImFlag2');
-
-    /*
-    console.log("image src1: ", image1.src);
-    console.log("image src2: ", image2.src);
-    */
-
-    resize_canvas(gl, image1);
-
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-
-    var image1_tex = create_texture(gl, image1, 0);
-    var image2_tex = create_texture(gl, image2, 1);
 
 	create_texture_coords("a_TexCoord", gl, program);
 
 	var u_Resolution = gl.getUniformLocation(program, "u_Resolution");
     gl.uniform2f(u_Resolution, gl.canvas.width, gl.canvas.height);
 
-    //console.log("image height: ", image.height);
-    var recQuad = createRec(gl, 0, 0, image1.width, image1.height);
-    //console.log("recQuad: ", recQuad);
-    var positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, recQuad, "positionBuffer", gl.STATIC_DRAW);
-    enableAttribute(gl, program, positionBuffer, "a_Position", 2, 0, 0);
-
-    //console.log("im 1 flag", im1flag);
-    im1flag = (im1flag) ? 1 : 0;
-    im2flag = (im2flag) ? 1 : 0;
-    //console.log("im 1 flag", im1flag);
-
-    gl.uniform1i(u_ImFlag1, im1flag);
-    gl.uniform1i(u_ImFlag2, im2flag);
-
-    if(e_tag == 'e1'){
-        inten_diff(gl, image1, image2);
-    }
-    if(e_tag == 'e2'){
-        kernel_conv(gl, image1, image2, 3, 3);
-    }
-    if(e_tag == 'e2'){
-        black_white(gl, image1, image2);
-    }
-    
-    return positionBuffer;
-
+    enableAttribute(gl, program, gl.positionBuffer, "a_Position", 2, 0, 0);
 }
 
-function render_image(gl, positionBuffer){
+/*
+ * switches to the given shader program and 
+ * initializes the shaders basic attributes 
+ *
+ */
+function switch_shader(gl, program){
+    gl.useProgram(program);
+    initialize_shader(gl, program);
+}
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+/*
+ * clears the color buffer and then draws
+ * the image quad using the current shader program
+ */
+function render_image(gl){
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.positionBuffer);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-function inten_diff(gl, im1, im2){
+function inten_diff(gl, tex1, tex2){
+    var u_Image1 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image1');
+    var u_Image2 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image2');
 
+    gl.uniform1i(u_Image1, tex1.textureid);
+    gl.uniform1i(u_Image2, tex2.textureid);
 }
 
-function black_white(gl, im1, im2){
-    
+function black_white(gl, inTex, outTex){
+    var u_Image1 = gl.getUniformLocation(gl.black_white_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex;  
 }
 
 //sets up/passes to shaders extra variables needed to do a convolution
-function kernel_conv(gl, im1, im2, rows, cols){
+function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
+    var u_Image1 = gl.getUniformLocation(gl.kernel_conv_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
 
     var u_Kernel = gl.getUniformLocation(gl.kernel_conv_program, 'u_Kernel');
     gl.uniform1i(u_Kernel, 2);
-    /*
-    var u_Rows = gl.getUniformLocation(gl.kernel_conv_program, 'u_KernelRow');
-    gl.uniform1f(u_Rows, rows);
-    var u_Cols = gl.getUniformLocation(gl.kernel_conv_program, 'u_KernelCol');
-    gl.uniform1f(u_Cols, cols);
-    */
     var u_KRes = gl.getUniformLocation(gl.kernel_conv_program, 'u_KRes');
     gl.uniform2f(u_KRes, cols, rows);
 
+    var identity = [
+        1.0, 0.0, 0.0
+    ];
+
     var data = [
-        0.0, 0.75, 0.0,
+        0.0, 0.5, 0.0,
         0.0, 0.0, 0.0,
-        0.75, 0.0, 0.0
+        0.5, 0.0, 0.0
     ];
 
     var data1 = [
@@ -431,7 +503,14 @@ function kernel_conv(gl, im1, im2, rows, cols){
         2.0, 0.0, 0.0
     ];
 
-        create_texture_from_array(gl, emboss, gl.FLOAT, gl.RGB, cols, rows, 2);
+    create_texture_from_array(gl, data, gl.FLOAT, gl.RGB, cols, rows, 2);
+
+
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+
+    
 }
 
 
@@ -503,7 +582,7 @@ function create_texture_coords(a_TexCoord, gl, program){
     enableAttribute(gl, program, texCoordBuffer, a_TexCoord, 2, 0, 0);
 }
 
-function create_texture(gl, image, textureid){
+function create_texture(gl, image, textureid, width, height){
     var texture = gl.createTexture();
 
     // creating the texture so that we can use any sized image
@@ -512,11 +591,18 @@ function create_texture(gl, image, textureid){
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
     gl.activeTexture(gl.TEXTURE0 + textureid);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+    if(image !== null){
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+    }else{
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        console.log("creating empty texture");
+    }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+    texture.textureid = textureid;
 
     return texture;
 }
