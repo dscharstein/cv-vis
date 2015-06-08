@@ -68,6 +68,7 @@ function initialize_gl() {
     gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
     gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
+    gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -107,6 +108,8 @@ function animation(gl){
     // initialize the textures and image quad
     initialize();
 
+    
+
     // checkboxes that control which image is displayed
     var im1_box = document.getElementById('im1_box');
     var im2_box = document.getElementById('im2_box');
@@ -122,23 +125,9 @@ function animation(gl){
     // form the dropdown menu
     program_select = function(){
         if(e_menu.value == 'e1'){
-            test_ping_pong(gl);
             switch_shader(gl, gl.inten_diff_program);
-            inten_diff(gl, gl.textures["im1_alter2"], gl.textures["im2_alter2"]);
-            gl.current_program = gl.inten_diff_program;
+            inten_diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"]);
         }
-        if(e_menu.value == 'e2'){
-            switch_shader(gl, gl.kernel_conv_program);
-            kernel_conv(gl, gl.images["image0"], gl.images["image1"], 1, 3);
-            gl.current_program = gl.kernel_conv_program
-        }
-        /*
-        if(e_menu.value == 'e3'){
-            program = gl.black_white_program;
-            gl.useProgram(program);
-            e_tag = e_menu.value;
-            positionBuffer = setup_image(gl, program);
-        }*/
     }
 
     program_select();
@@ -147,7 +136,7 @@ function animation(gl){
         program_select();
     }
 
-
+    var old_program = gl.current_program;
     // handle which of the two images is displayed
     // using the input from the checkboxes
     var im1flag = im1_box.checked;
@@ -205,6 +194,8 @@ function animation(gl){
                     // do nothing
             return;
         }
+        switch_shader(gl, old_program);
+
         // while the mouse is down keep updating
         // the variables storing the mouse's location
         var new_mouse_x = event.clientX;
@@ -233,6 +224,7 @@ function animation(gl){
     /********************************************/
     var moveDist = 1; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
+    
 
     //create "dictionary" of keys and store whether they are pressed or not
     var pressedKeys = {};
@@ -257,6 +249,9 @@ function animation(gl){
             moveDist = moveDist-0.05;
         } 
 
+        if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83]){
+            switch_shader(gl, old_program);
+        }
         //horizontal motion key control:
         if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
             dx -= moveDist;
@@ -294,6 +289,25 @@ function animation(gl){
             s_val = 0.75;
         }
 
+        //set to blink mode and displays image 2
+        if (pressedKeys[66]){
+            if (!(gl.current_program == gl.display_program)){
+                old_program = gl.current_program
+                switch_shader(gl, gl.display_program);
+            }
+            var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
+            gl.uniform1i(u_ImFlag1, 0);
+            var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
+            gl.uniform1i(u_ImFlag2, 1);
+        }else{
+            if(gl.current_program == gl.display_program){
+                var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
+                gl.uniform1i(u_ImFlag1, 1);
+                var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
+                gl.uniform1i(u_ImFlag2, 0);
+            }
+        }
+
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
         dy_text.innerHTML = (-dy).toFixed(4);
@@ -325,6 +339,7 @@ function animation(gl){
 
 
 function test_ping_pong(gl){
+    /*
     switch_shader(gl, gl.black_white_program);
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     switch_shader(gl, gl.kernel_conv_program);
@@ -334,6 +349,13 @@ function test_ping_pong(gl){
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     switch_shader(gl, gl.kernel_conv_program);
     gl.textures["im1_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
+    */
+
+    switch_shader(gl, gl.kernel_conv_program);
+    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, 0, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
 }
 
 
@@ -412,6 +434,7 @@ function initialize_shader(gl, program){
  */
 function switch_shader(gl, program){
     gl.useProgram(program);
+    gl.current_program = program;
     initialize_shader(gl, program);
 }
 
@@ -503,7 +526,7 @@ function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
         2.0, 0.0, 0.0
     ];
 
-    create_texture_from_array(gl, data, gl.FLOAT, gl.RGB, cols, rows, 2);
+    create_texture_from_array(gl, data1, gl.FLOAT, gl.RGB, cols, rows, 2);
 
 
     render_image(gl);
