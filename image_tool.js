@@ -70,6 +70,7 @@ function initialize_gl() {
     gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
     gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
     gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
+    gl.abs_diff_program = initShaders(gl, "abs-diff-vertex-shader", "abs-diff-fragment-shader");
     gl.bleyer_program = initShaders(gl, "bleyer-vertex-shader", "bleyer-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
@@ -131,8 +132,9 @@ function animation(gl){
     // form the dropdown menu
     program_select = function(){
         if(e_menu.value == 'e1'){
+            test(gl);
             currentIm1 = gl.textures["orig_image1"];
-            currentIm2 = gl.textures["orig_image2"];
+            currentIm2 = gl.textures["im2_alter1"];
             switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
         }
         if (e_menu.value == 'e2'){
@@ -347,6 +349,13 @@ function animation(gl){
     };
     
     tick();
+
+}
+
+function test(gl){
+
+    switch_shader(gl, gl.abs_diff_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im2_alter1"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["im2_alter1"]);
 
 }
 
@@ -637,6 +646,45 @@ function sobel(gl, x_order, y_order, kernel_size, scale, inTex, outTex) {
     var outTex = kernel_conv(gl, kernel_size, kernel_size, [-1, -1], kernel, inTex, outTex);
 
     return outTex;
+}
+
+
+function abs_diff(gl, inTex1, inTex2, outTex){
+    var u_Image1 = gl.getUniformLocation(gl.abs_diff_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.abs_diff_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    return outTex;  
+}
+
+
+function add_weighted(gl, alpha, beta, gamma, inTex1, inTex2, outTex){
+    var u_Image1 = gl.getUniformLocation(gl.addweighted_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.addweighted_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+
+    var u_Alpha = gl.getUniformLocation(gl.addweighted_program, 'u_Alpha');
+    gl.uniform1i(u_Alpha, alpha);
+    var u_Beta = gl.getUniformLocation(gl.addweighted_program, 'u_Beta');
+    gl.uniform1i(u_Beta, beta);
+    var u_Gamma = gl.getUniformLocation(gl.addweighted_program, 'u_Gamma');
+    gl.uniform1i(u_Gamma, gamma);
+
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    return outTex;  
 }
 
 
