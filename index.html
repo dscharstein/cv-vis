@@ -227,8 +227,66 @@
 
 
 
+         <script id="magnitude-vertex-shader" type="x-shader/x-vertex">
+        //***********************************MAGNITUDE SHADERS:*****************************************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="magnitude-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+
+            vec2 uv_1;
+            vec2 uv_2;
+
+            vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
+            vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
+
+            void main(){
+                float color = sqrt(pow(texture2D(u_Image1, v_TexCoord).r, 2.0) + pow(texture2D(u_Image2, v_TexCoord).r, 2.0));
+
+                gl_FragColor = vec4(color, color, color, 1.0);
+            } 
+        </script>
+
+
          <script id="bleyer-vertex-shader" type="x-shader/x-vertex">
-        //***************************COLOR TO B&W SHADERS:*****************************************************************
+        //*************************************COLOR TO B&W SHADERS:*****************************************************************
             attribute vec2 a_Position;
             attribute vec2 a_TexCoord; // texture coordinate of the vertex
             uniform vec2 u_Resolution;
@@ -400,7 +458,8 @@
 
        <p>
             <select id="effect_menu">
-                <option value="e1">Intensity Difference</option>
+                <option value="e1">Color Difference</option>
+                <option value="e2">Gradient Difference</option>
             </select>
         </p>
 

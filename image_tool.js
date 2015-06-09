@@ -69,6 +69,8 @@ function initialize_gl() {
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
     gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
     gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
+    gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
+    gl.bleyer_program = initShaders(gl, "bleyer-vertex-shader", "bleyer-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -115,11 +117,13 @@ function animation(gl){
     // checkboxes that control which image is displayed
     var im1_box = document.getElementById('im1_box');
     var im2_box = document.getElementById('im2_box');
-
+    im1_box.checked = false;
+    im2_box.checked = false;
     
     // dropdown menu to control which visualization is
     // currently running
     var e_menu = document.getElementById('effect_menu');
+    e_menu.value = 'e1';
     var e_tag;
 
     // fucntion used to change visualizations
@@ -127,8 +131,14 @@ function animation(gl){
     // form the dropdown menu
     program_select = function(){
         if(e_menu.value == 'e1'){
-            test_ping_pong(gl);
-            currentIm2 = gl.textures["im2_alter2"];
+            currentIm1 = gl.textures["orig_image1"];
+            currentIm2 = gl.textures["orig_image2"];
+            switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
+        }
+        if (e_menu.value == 'e2'){
+            gradient(gl);
+            currentIm1 = gl.textures["im1_alter1"];
+            currentIm2 = gl.textures["im2_alter1"];
             switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
         }
     }
@@ -341,7 +351,7 @@ function animation(gl){
 }
 
 
-function test_ping_pong(gl){
+function gradient(gl){
     /*
     switch_shader(gl, gl.black_white_program);
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
@@ -364,7 +374,30 @@ function test_ping_pong(gl){
 
     switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
-    gl.textures["im2_alter2"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+
+    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
+
+    switch_shader(gl, gl.magnitude_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]);
+
+
+
+
+    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
+    gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
+
+    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
+    gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
+
+    switch_shader(gl, gl.magnitude_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]);
+
+
 
 
 }
@@ -392,9 +425,11 @@ function initialize(){
 
     gl.textures["im1_alter1"] = create_texture(gl, null, 3, image1.width, image1.height);
     gl.textures["im1_alter2"] = create_texture(gl, null, 4, image1.width, image1.height);
+    gl.textures["im1_alter3"] = create_texture(gl, null, 5, image1.width, image1.height);
 
-    gl.textures["im2_alter1"] = create_texture(gl, null, 5, image2.width, image2.height);
-    gl.textures["im2_alter2"] = create_texture(gl, null, 6, image2.width, image2.height);
+    gl.textures["im2_alter1"] = create_texture(gl, null, 6, image2.width, image2.height);
+    gl.textures["im2_alter2"] = create_texture(gl, null, 7, image2.width, image2.height);
+    gl.textures["im2_alter3"] = create_texture(gl, null, 8, image2.width, image2.height);
 }
 
 /*
@@ -477,6 +512,20 @@ function black_white(gl, inTex, outTex){
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return outTex;  
 }
+
+function magnitude(gl, inTex1, inTex2, outTex){
+    var u_Image1 = gl.getUniformLocation(gl.magnitude_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.magnitude_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+}
+
 
 //sets up/passes to shaders extra variables needed to do a convolution
 //does kernel convolution using a kernel of "rows" rows and "cols" columns,
