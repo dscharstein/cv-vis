@@ -108,6 +108,8 @@ function animation(gl){
     // initialize the textures and image quad
     initialize();
 
+    var currentIm1 = gl.textures["orig_image1"];
+    var currentIm2 = gl.textures["orig_image2"];
     
 
     // checkboxes that control which image is displayed
@@ -125,8 +127,9 @@ function animation(gl){
     // form the dropdown menu
     program_select = function(){
         if(e_menu.value == 'e1'){
-            switch_shader(gl, gl.inten_diff_program);
-            inten_diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+            test_ping_pong(gl);
+            currentIm2 = gl.textures["im2_alter2"];
+            switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
         }
     }
 
@@ -194,7 +197,7 @@ function animation(gl){
                     // do nothing
             return;
         }
-        switch_shader(gl, old_program);
+        switch_shader(gl, old_program, currentIm1, currentIm2);
 
         // while the mouse is down keep updating
         // the variables storing the mouse's location
@@ -250,7 +253,7 @@ function animation(gl){
         } 
 
         if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83]){
-            switch_shader(gl, old_program);
+            switch_shader(gl, old_program, currentIm1, currentIm2);
         }
         //horizontal motion key control:
         if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
@@ -293,7 +296,7 @@ function animation(gl){
         if (pressedKeys[66]){
             if (!(gl.current_program == gl.display_program)){
                 old_program = gl.current_program
-                switch_shader(gl, gl.display_program);
+                switch_shader(gl, gl.display_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
             }
             var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
             gl.uniform1i(u_ImFlag1, 0);
@@ -351,11 +354,19 @@ function test_ping_pong(gl){
     gl.textures["im1_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
     */
 
-    switch_shader(gl, gl.kernel_conv_program);
-    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, 0, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
-    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
-    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter2"], gl.textures["im2_alter1"]);
-    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+    //switch_shader(gl, gl.kernel_conv_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    /*
+    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+    */
+
+    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+
+
 }
 
 
@@ -409,14 +420,14 @@ function create_image_plane(width, height){
  * and image resolution
  *
  */
-function initialize_shader(gl, program){
+function initialize_shader(gl, program, tex1, tex2){
 
     // init texture switching uniforms for texture
     var u_Image1 = gl.getUniformLocation(program, 'u_Image1');
     var u_Image2 = gl.getUniformLocation(program, 'u_Image2');
 
-    gl.uniform1i(u_Image1, 0);
-    gl.uniform1i(u_Image2, 1);
+    gl.uniform1i(u_Image1, tex1.textureid);
+    gl.uniform1i(u_Image2, tex2.textureid);
 
 
 	create_texture_coords("a_TexCoord", gl, program);
@@ -432,10 +443,10 @@ function initialize_shader(gl, program){
  * initializes the shaders basic attributes 
  *
  */
-function switch_shader(gl, program){
+function switch_shader(gl, program, tex1, tex2){
     gl.useProgram(program);
     gl.current_program = program;
-    initialize_shader(gl, program);
+    initialize_shader(gl, program, tex1, tex2);
 }
 
 /*
@@ -468,9 +479,15 @@ function black_white(gl, inTex, outTex){
 }
 
 //sets up/passes to shaders extra variables needed to do a convolution
-function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
+//does kernel convolution using a kernel of "rows" rows and "cols" columns,
+//with anchor pixel "anchor" on inTex and writes the result to outTex
+//for sampling outside of the image range it repeats the border pixels
+function kernel_conv(gl, rows, cols, anchor, kernel, inTex, outTex){
     var u_Image1 = gl.getUniformLocation(gl.kernel_conv_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex.textureid);
+    var u_Anchor = gl.getUniformLocation(gl.kernel_conv_program, 'u_Anchor');
+    gl.uniform2f(u_Anchor, anchor[0], anchor[1]);
+
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
@@ -484,13 +501,13 @@ function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
         1.0, 0.0, 0.0
     ];
 
-    var data = [
+    var deriv = [
         0.0, 0.5, 0.0,
         0.0, 0.0, 0.0,
         0.5, 0.0, 0.0
     ];
 
-    var data1 = [
+    var blur = [
         0.0625, 0.0, 0.0,
         0.125, 0.0, 0.0,
         0.0625, 0.0, 0.0,
@@ -526,7 +543,7 @@ function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
         2.0, 0.0, 0.0
     ];
 
-    create_texture_from_array(gl, data1, gl.FLOAT, gl.RGB, cols, rows, 2);
+    create_texture_from_array(gl, kernel, gl.FLOAT, gl.RGB, cols, rows, 2);
 
 
     render_image(gl);
@@ -534,6 +551,43 @@ function kernel_conv(gl, rows, cols, kernel, inTex, outTex){
     return outTex; 
 
     
+}
+
+
+//applies a sobel filter to approximate the derivatives of an image
+//calls kernel_conv to accomplish this
+function sobel(gl, x_order, y_order, kernel_size, scale, inTex, outTex) {
+    switch_shader(gl, gl.kernel_conv_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    if (x_order == 1){
+        var kernel = new Float32Array([
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            0.0, 2.0, 0.0,
+            0.0, 0.0, 0.0,
+            2.0, 0.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0
+            ]);
+    }
+    else{
+        var kernel = new Float32Array([
+            0.0, 1.0, 0.0,
+            0.0, 2.0, 0.0,
+            0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            2.0, 0.0, 0.0,
+            1.0, 0.0, 0.0
+            ]);
+    }
+
+    var outTex = kernel_conv(gl, kernel_size, kernel_size, [-1, -1], kernel, inTex, outTex);
+
+    return outTex;
 }
 
 
