@@ -8,7 +8,7 @@
 
 var im_name = "cones.png";
 var mode;
-var modes = ["inten_diff", "gradient", "bleyer", "blink"];
+var modes = ["inten_diff", "gradient", "bleyer", "icpr", "blink"];
 
 
 /*
@@ -143,6 +143,10 @@ function animation(gl){
         }
         if (e_menu.value == 'e3'){
             mode = modes.indexOf("bleyer");
+            old_state.mode = mode;
+        }
+        if (e_menu.value == 'e4'){
+            mode = modes.indexOf("icpr");
             old_state.mode = mode;
         }
     }
@@ -369,8 +373,12 @@ function animation(gl){
                 bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
                 break;
             case 3:
+                icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+            case 4:
                 myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
                 break;
+
         } 
 
         display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
@@ -421,24 +429,22 @@ function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
         );
 
     gl.textures["im1_alter1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im1_alter1"]); 
-    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["im2_alter1"], gl.textures["im1_alter2"]); //****
+    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"], gl.textures["im1_alter2"]); 
 
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter2"]);
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]); 
 
 
     gl.textures["im2_alter2"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter3"]); 
-    gl.textures["im1_alter3"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter3"]);
-    gl.textures["im2_alter2"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter3"], gl.textures["im2_alter2"]); 
-    gl.textures["im1_alter3"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im2_alter2"], gl.textures["im1_alter3"]); 
+    gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter2"], gl.textures["im1_alter3"]); 
+    gl.textures["im2_alter2"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im2_alter2"], gl.textures["im2_alter2"]); 
 
-    gl.textures["im2_alter2"] = abs_diff(gl, gl.textures["im2_alter1"], gl.textures["im2_alter3"], gl.textures["im2_alter2"]); //****
+    gl.textures["scratch1"] = abs_diff(gl, gl.textures["im2_alter1"], gl.textures["im2_alter2"], gl.textures["scratch1"]); 
 
-    add_weighted(gl, 0.1, 0.9, 0.0, gl.textures["im1_alter2"], gl.textures["im2_alter2"], gl.textures["out"]); 
+    add_weighted(gl, 0.1, 0.9, 0.0, gl.textures["im1_alter2"], gl.textures["scratch1"], gl.textures["out"]); 
 }
 
 
@@ -447,7 +453,6 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]);
     var transMat = mat3(
@@ -460,12 +465,42 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
-    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
     gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]);
 
 
     diff(gl, gl.textures["im1_alter1"], gl.textures["im2_alter2"], gl.textures["out"], im1flag, im2flag, s_val);
+}
+
+
+function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+
+    var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+
+    gl.textures["scratch1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im1_alter1"]); 
+
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["scratch1"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]); 
+    gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]); 
+
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
+    gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]); 
+    gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]); 
+
+    gl.textures["scratch1"] = add_weighted(gl, -1.0, 1.0, 0.0, gl.textures["im2_alter2"], gl.textures["im1_alter2"], gl.textures["scratch1"]); //xmag diff
+    gl.textures["scratch2"] = add_weighted(gl, -1.0, 1.0, 0.0, gl.textures["im2_alter3"], gl.textures["im1_alter3"], gl.textures["scratch2"]); //ymag diff
+
+    gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]); //overall mag 1 //***
+    gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]); //overall mag 2 //***
+
+    gl.textures["im1_alter2"] = add_weighted(gl, 1.0, 1.0, 0.0, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["im1_alter2"]); //mag sums
+    gl.textures["im1_alter3"] = magnitude(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["im1_alter3"]);
+
+    add_weighted(gl, 0.5, -1.0, 0.5, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["out"]);
 }
 
 
@@ -497,7 +532,10 @@ function initialize(){
     gl.textures["im2_alter2"] = create_texture(gl, null, 7, image2.width, image2.height);
     gl.textures["im2_alter3"] = create_texture(gl, null, 8, image2.width, image2.height);
 
-    gl.textures["out"] = create_texture(gl, null, 9, image2.width, image2.height);
+    gl.textures["scratch1"] = create_texture(gl, null, 9, image1.width, image1.height);
+    gl.textures["scratch2"] = create_texture(gl, null, 10, image1.width, image1.height);
+
+    gl.textures["out"] = create_texture(gl, null, 11, image2.width, image2.height);
 }
 
 /*
