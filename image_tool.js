@@ -74,6 +74,7 @@ function initialize_gl() {
     gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
     gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
     gl.abs_diff_program = initShaders(gl, "abs-diff-vertex-shader", "abs-diff-fragment-shader");
+    gl.addweighted_program = initShaders(gl, "addweighted-vertex-shader", "addweighted-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -138,6 +139,10 @@ function animation(gl){
         }
         if (e_menu.value == 'e2'){
             mode = modes.indexOf("gradient");
+            old_state.mode = mode;
+        }
+        if (e_menu.value == 'e3'){
+            mode = modes.indexOf("bleyer");
             old_state.mode = mode;
         }
     }
@@ -409,7 +414,31 @@ function myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 }
 
 function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+    var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
 
+    gl.textures["im1_alter1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im1_alter1"]); 
+    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["im2_alter1"], gl.textures["im1_alter2"]); //****
+
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
+    gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]); 
+
+
+    gl.textures["im2_alter2"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter3"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter3"]); 
+    gl.textures["im1_alter3"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter3"]);
+    gl.textures["im2_alter2"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter3"], gl.textures["im2_alter2"]); 
+    gl.textures["im1_alter3"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im2_alter2"], gl.textures["im1_alter3"]); 
+
+    gl.textures["im2_alter2"] = abs_diff(gl, gl.textures["im2_alter1"], gl.textures["im2_alter3"], gl.textures["im2_alter2"]); //****
+
+    add_weighted(gl, 0.1, 0.9, 0.0, gl.textures["im1_alter2"], gl.textures["im2_alter2"], gl.textures["out"]); 
 }
 
 
@@ -752,11 +781,11 @@ function add_weighted(gl, alpha, beta, gamma, inTex1, inTex2, outTex){
     gl.uniform1i(u_Image2, inTex2.textureid);
 
     var u_Alpha = gl.getUniformLocation(gl.addweighted_program, 'u_Alpha');
-    gl.uniform1i(u_Alpha, alpha);
+    gl.uniform1f(u_Alpha, alpha);
     var u_Beta = gl.getUniformLocation(gl.addweighted_program, 'u_Beta');
-    gl.uniform1i(u_Beta, beta);
+    gl.uniform1f(u_Beta, beta);
     var u_Gamma = gl.getUniformLocation(gl.addweighted_program, 'u_Gamma');
-    gl.uniform1i(u_Gamma, gamma);
+    gl.uniform1f(u_Gamma, gamma);
 
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
