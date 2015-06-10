@@ -67,13 +67,13 @@ function initialize_gl() {
 
     // create program with our shaders and store a reference to them 
     // in the gl object
+    gl.transform_program = initShaders(gl, "transform-vertex-shader", "transform-fragment-shader");
     gl.inten_diff_program = initShaders(gl, "inten-diff-vertex-shader", "inten-diff-fragment-shader");
     gl.kernel_conv_program = initShaders(gl, "kernel-conv-vertex-shader", "kernel-conv-fragment-shader");
     gl.black_white_program = initShaders(gl, "color-bw-vertex-shader", "color-bw-fragment-shader");
     gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
     gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
     gl.abs_diff_program = initShaders(gl, "abs-diff-vertex-shader", "abs-diff-fragment-shader");
-
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -385,14 +385,25 @@ function display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 }
 
 function inten_diff(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
-    diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["out"], im1flag, im2flag, scale_dx, scale_dy, s_val);
+    var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+    gl.textures["im2_alter1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+    diff(gl, gl.textures["orig_image1"], gl.textures["im2_alter1"], gl.textures["out"], im1flag, im2flag, s_val);
 }
 
 function myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     if(im1flag){
         copy_tex(gl, gl.textures["orig_image1"], gl.textures["out"]);
     }else{
-        diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["out"], false, true, scale_dx, scale_dy, s_val);
+        var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+        transform(gl, transMat, gl.textures["orig_image2"], gl.textures["out"]);
     }
 
 }
@@ -410,6 +421,13 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]);
+    var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+    gl.textures["im2_alter2"] = transform(gl, transMat, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+
 
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
@@ -417,7 +435,8 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
     gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]);
 
-    diff(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["out"], im1flag, im2flag, scale_dx, scale_dy, s_val);
+
+    diff(gl, gl.textures["im1_alter1"], gl.textures["im2_alter2"], gl.textures["out"], im1flag, im2flag, s_val);
 }
 
 
@@ -514,6 +533,23 @@ function render_image(gl){
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
+
+function transform(gl, transMat, inTex, outTex){
+    switch_shader(gl, gl.transform_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.transform_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex.textureid);
+    var u_TransMat = gl.getUniformLocation(gl.transform_program, 'u_TransMat');
+    gl.uniformMatrix3fv(u_TransMat, false, flatten(transMat));
+
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex;  
+}
+
+
 function copy_tex(gl, inTex, outTex){
     switch_shader(gl, gl.display_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
@@ -526,7 +562,7 @@ function copy_tex(gl, inTex, outTex){
     return outTex;  
 }
 
-function diff(gl, inTex1, inTex2, outTex, im1flag, im2flag, dx, dy, s_val){
+function diff(gl, inTex1, inTex2, outTex, im1flag, im2flag, s_val){
     switch_shader(gl, gl.inten_diff_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
 
     var u_ImFlag1 = gl.getUniformLocation(gl.inten_diff_program, 'u_ImFlag1');
@@ -535,11 +571,7 @@ function diff(gl, inTex1, inTex2, outTex, im1flag, im2flag, dx, dy, s_val){
     var u_ImFlag2 = gl.getUniformLocation(gl.inten_diff_program, 'u_ImFlag2');
     gl.uniform1i(u_ImFlag2, im2flag);
 
-    var u_Dx = gl.getUniformLocation(gl.inten_diff_program, 'u_Dx');
-    var u_Dy = gl.getUniformLocation(gl.inten_diff_program, 'u_Dy');
-    var u_S = gl.getUniformLocation(gl.inten_diff_program, 'u_S');
-    gl.uniform1f(u_Dx, dx);
-    gl.uniform1f(u_Dy, dy);     
+    var u_S = gl.getUniformLocation(gl.inten_diff_program, 'u_S');    
     gl.uniform1f(u_S, s_val);
 
     var u_Image1 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image1');
