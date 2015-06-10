@@ -7,6 +7,8 @@
  */
 
 var im_name = "cones.png";
+var mode;
+var modes = ["inten_diff", "gradient", "bleyer", "blink"];
 
 
 /*
@@ -71,7 +73,7 @@ function initialize_gl() {
     gl.display_program = initShaders(gl, "display-vertex-shader", "display-fragment-shader");
     gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
     gl.abs_diff_program = initShaders(gl, "abs-diff-vertex-shader", "abs-diff-fragment-shader");
-    gl.bleyer_program = initShaders(gl, "bleyer-vertex-shader", "bleyer-fragment-shader");
+
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -111,15 +113,14 @@ function animation(gl){
     // initialize the textures and image quad
     initialize();
 
-    var currentIm1 = gl.textures["orig_image1"];
-    var currentIm2 = gl.textures["orig_image2"];
-    
-
     // checkboxes that control which image is displayed
     var im1_box = document.getElementById('im1_box');
     var im2_box = document.getElementById('im2_box');
     im1_box.checked = false;
     im2_box.checked = false;
+
+    var old_state = {};
+    old_state.mode = mode;
     
     // dropdown menu to control which visualization is
     // currently running
@@ -132,16 +133,12 @@ function animation(gl){
     // form the dropdown menu
     program_select = function(){
         if(e_menu.value == 'e1'){
-            test(gl);
-            currentIm1 = gl.textures["orig_image1"];
-            currentIm2 = gl.textures["im2_alter1"];
-            switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
+            mode = modes.indexOf("inten_diff");
+            old_state.mode = mode;
         }
         if (e_menu.value == 'e2'){
-            gradient(gl);
-            currentIm1 = gl.textures["im1_alter1"];
-            currentIm2 = gl.textures["im2_alter1"];
-            switch_shader(gl, gl.inten_diff_program, currentIm1, currentIm2);
+            mode = modes.indexOf("gradient");
+            old_state.mode = mode;
         }
     }
 
@@ -151,25 +148,19 @@ function animation(gl){
         program_select();
     }
 
-    var old_program = gl.current_program;
+    
     // handle which of the two images is displayed
     // using the input from the checkboxes
     var im1flag = im1_box.checked;
     im1_box.onchange = function(){
         im1flag = im1_box.checked;
-        // convert the boolean to an int to send to the shader
-        im1flag = (im1flag) ? 1 : 0;
-        var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
-        gl.uniform1i(u_ImFlag1, im1flag);
+        old_state.im1flag = im1flag;
     }
 
     var im2flag = im2_box.checked;
     im2_box.onchange = function(){
         im2flag = im2_box.checked;
-        // convert the boolean to an int to send to the shader
-        im2flag = (im2flag) ? 1 : 0;
-        var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
-        gl.uniform1i(u_ImFlag2, im2flag);
+        old_state.im2flag = im2flag;
     }
 
 
@@ -209,7 +200,11 @@ function animation(gl){
                     // do nothing
             return;
         }
-        switch_shader(gl, old_program, currentIm1, currentIm2);
+        mode = old_state.mode;
+        im1flag = old_state.im1flag;
+        im2flag = old_state.im2flag;
+        im1_box.checked = im1flag;
+        im2_box.checked = im2flag;
 
         // while the mouse is down keep updating
         // the variables storing the mouse's location
@@ -265,7 +260,11 @@ function animation(gl){
         } 
 
         if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83]){
-            switch_shader(gl, old_program, currentIm1, currentIm2);
+            mode = old_state.mode;
+            im1flag = old_state.im1flag;
+            im2flag = old_state.im2flag;
+            im1_box.checked = im1flag;
+            im2_box.checked = im2flag;
         }
         //horizontal motion key control:
         if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
@@ -306,20 +305,20 @@ function animation(gl){
 
         //set to blink mode and displays image 2
         if (pressedKeys[66]){
-            if (!(gl.current_program == gl.display_program)){
-                old_program = gl.current_program
-                switch_shader(gl, gl.display_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+            if (mode !== modes.indexOf("blink")){
+                old_state.mode = mode;
+                mode = modes.indexOf("blink");
             }
-            var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
-            gl.uniform1i(u_ImFlag1, 0);
-            var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
-            gl.uniform1i(u_ImFlag2, 1);
+            im1flag = 1;
+            im2flag = 0;
+            im1_box.checked = true;
+            im2_box.checked = false;
         }else{
-            if(gl.current_program == gl.display_program){
-                var u_ImFlag1 = gl.getUniformLocation(gl.current_program, 'u_ImFlag1');
-                gl.uniform1i(u_ImFlag1, 1);
-                var u_ImFlag2 = gl.getUniformLocation(gl.current_program, 'u_ImFlag2');
-                gl.uniform1i(u_ImFlag2, 0);
+            if(mode == modes.indexOf("blink")){
+                im1flag = 0;
+                im2flag = 1;
+                im1_box.checked = false;
+                im2_box.checked = true;
             }
         }
 
@@ -336,15 +335,41 @@ function animation(gl){
 
         handleKeys();
 
+        /*
         var u_Dx = gl.getUniformLocation(gl.current_program, 'u_Dx');
         var u_Dy = gl.getUniformLocation(gl.current_program, 'u_Dy');
         var u_S = gl.getUniformLocation(gl.current_program, 'u_S');
 
         gl.uniform1f(u_Dx, dx / gl.images["image0"].width );
         gl.uniform1f(u_Dy, -(dy / gl.images["image0"].height) );     
-        gl.uniform1f(u_S, s_val);   
+        gl.uniform1f(u_S, s_val);
+        */
 
-        render_image(gl);
+        var scale_dx = dx / gl.images["image0"].width;
+        var scale_dy = -(dy / gl.images["image0"].height);
+        // convert the boolean to an int to send to the shader
+        im1flag = (im1flag) ? 1 : 0;
+        // convert the boolean to an int to send to the shader
+        im2flag = (im2flag) ? 1 : 0;
+
+
+        switch(mode){
+            case 0:
+                inten_diff(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+            case 1:
+                gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+            case 2:
+                bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+            case 3:
+                myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+        } 
+
+        display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+        //render_image(gl);
         requestAnimationFrame(tick);
     };
     
@@ -352,63 +377,47 @@ function animation(gl){
 
 }
 
-function test(gl){
+function display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+    switch_shader(gl, gl.display_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
+    gl.uniform1i(u_Image1, gl.textures["out"].textureid);
+    render_image(gl);
+}
 
-    switch_shader(gl, gl.abs_diff_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
-    gl.textures["im2_alter1"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["im2_alter1"]);
+function inten_diff(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+    diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["out"], im1flag, im2flag, scale_dx, scale_dy, s_val);
+}
+
+function myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+    if(im1flag){
+        copy_tex(gl, gl.textures["orig_image1"], gl.textures["out"]);
+    }else{
+        diff(gl, gl.textures["orig_image1"], gl.textures["orig_image2"], gl.textures["out"], false, true, scale_dx, scale_dy, s_val);
+    }
+
+}
+
+function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 
 }
 
 
-function gradient(gl){
-    /*
-    switch_shader(gl, gl.black_white_program);
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
-    switch_shader(gl, gl.kernel_conv_program);
-    gl.textures["im2_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
+function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 
-    switch_shader(gl, gl.black_white_program);
-    gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
-    switch_shader(gl, gl.kernel_conv_program);
-    gl.textures["im1_alter2"] = kernel_conv(gl, 1, 3, 0, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
-    */
-
-    //switch_shader(gl, gl.kernel_conv_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
-    /*
-    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
-    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
-    gl.textures["im2_alter1"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter2"], gl.textures["im2_alter1"]);
-    gl.textures["im2_alter2"] = kernel_conv(gl, 3, 3, [-1,-1], 0, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
-    */
-
-    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
-
-    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["orig_image2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
-
-    switch_shader(gl, gl.magnitude_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]);
 
-
-
-
-    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
-
-    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
-
-    switch_shader(gl, gl.magnitude_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]);
 
-
-
-
+    diff(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["out"], im1flag, im2flag, scale_dx, scale_dy, s_val);
 }
 
 
@@ -439,6 +448,8 @@ function initialize(){
     gl.textures["im2_alter1"] = create_texture(gl, null, 6, image2.width, image2.height);
     gl.textures["im2_alter2"] = create_texture(gl, null, 7, image2.width, image2.height);
     gl.textures["im2_alter3"] = create_texture(gl, null, 8, image2.width, image2.height);
+
+    gl.textures["out"] = create_texture(gl, null, 9, image2.width, image2.height);
 }
 
 /*
@@ -503,15 +514,48 @@ function render_image(gl){
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-function inten_diff(gl, tex1, tex2){
-    var u_Image1 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image1');
-    var u_Image2 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image2');
+function copy_tex(gl, inTex, outTex){
+    switch_shader(gl, gl.display_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex;  
+}
 
-    gl.uniform1i(u_Image1, tex1.textureid);
-    gl.uniform1i(u_Image2, tex2.textureid);
+function diff(gl, inTex1, inTex2, outTex, im1flag, im2flag, dx, dy, s_val){
+    switch_shader(gl, gl.inten_diff_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+
+    var u_ImFlag1 = gl.getUniformLocation(gl.inten_diff_program, 'u_ImFlag1');
+    gl.uniform1i(u_ImFlag1, im1flag);
+
+    var u_ImFlag2 = gl.getUniformLocation(gl.inten_diff_program, 'u_ImFlag2');
+    gl.uniform1i(u_ImFlag2, im2flag);
+
+    var u_Dx = gl.getUniformLocation(gl.inten_diff_program, 'u_Dx');
+    var u_Dy = gl.getUniformLocation(gl.inten_diff_program, 'u_Dy');
+    var u_S = gl.getUniformLocation(gl.inten_diff_program, 'u_S');
+    gl.uniform1f(u_Dx, dx);
+    gl.uniform1f(u_Dy, dy);     
+    gl.uniform1f(u_S, s_val);
+
+    var u_Image1 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.inten_diff_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
 }
 
 function black_white(gl, inTex, outTex){
+    switch_shader(gl, gl.black_white_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.black_white_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex.textureid);
     var targetFBO = gl.createFramebuffer();
@@ -523,6 +567,7 @@ function black_white(gl, inTex, outTex){
 }
 
 function magnitude(gl, inTex1, inTex2, outTex){
+    switch_shader(gl, gl.magnitude_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.magnitude_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex1.textureid);
     var u_Image2 = gl.getUniformLocation(gl.magnitude_program, 'u_Image2');
@@ -541,6 +586,7 @@ function magnitude(gl, inTex1, inTex2, outTex){
 //with anchor pixel "anchor" on inTex and writes the result to outTex
 //for sampling outside of the image range it repeats the border pixels
 function kernel_conv(gl, rows, cols, anchor, kernel, inTex, outTex){
+    switch_shader(gl, gl.kernel_conv_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.kernel_conv_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex.textureid);
     var u_Anchor = gl.getUniformLocation(gl.kernel_conv_program, 'u_Anchor');
@@ -650,6 +696,7 @@ function sobel(gl, x_order, y_order, kernel_size, scale, inTex, outTex) {
 
 
 function abs_diff(gl, inTex1, inTex2, outTex){
+    switch_shader(gl, gl.abs_diff_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.abs_diff_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex1.textureid);
     var u_Image2 = gl.getUniformLocation(gl.abs_diff_program, 'u_Image2');
@@ -666,6 +713,7 @@ function abs_diff(gl, inTex1, inTex2, outTex){
 
 
 function add_weighted(gl, alpha, beta, gamma, inTex1, inTex2, outTex){
+    switch_shader(gl, gl.addweighted_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
     var u_Image1 = gl.getUniformLocation(gl.addweighted_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex1.textureid);
     var u_Image2 = gl.getUniformLocation(gl.addweighted_program, 'u_Image2');
