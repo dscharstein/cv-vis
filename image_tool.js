@@ -450,7 +450,7 @@ function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     gl.textures["im2_alter2"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter3"]); 
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter2"], gl.textures["im1_alter3"]); 
-    gl.textures["im2_alter2"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im2_alter2"], gl.textures["im2_alter2"]); 
+    gl.textures["im2_alter2"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im1_alter3"], gl.textures["im2_alter2"]); 
 
     gl.textures["scratch1"] = abs_diff(gl, gl.textures["im2_alter1"], gl.textures["im2_alter2"], gl.textures["scratch1"]); 
 
