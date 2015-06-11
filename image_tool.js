@@ -439,7 +439,7 @@ function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
         );
 
     gl.textures["im1_alter1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im1_alter1"]); 
-    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"], gl.textures["im1_alter2"]); 
+    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["orig_image1"], gl.textures["im1_alter1"], gl.textures["im1_alter2"]); //****
 
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter2"]);
