@@ -905,6 +905,17 @@ function sobel(gl, x_order, y_order, kernel_size, scale, inTex, outTex) {
             0.0, 0.0, 0.0,
             1.0, 0.0, 0.0
             ]);
+        /*var kernel = new Float32Array([
+            0.0, 3.0, 0.0,
+            0.0, 0.0, 0.0,
+            3.0, 0.0, 0.0,
+            0.0, 10.0, 0.0,
+            0.0, 0.0, 0.0,
+            10.0, 0.0, 0.0,
+            0.0, 3.0, 0.0,
+            0.0, 0.0, 0.0,
+            3.0, 0.0, 0.0
+            ]);*/
     }
     else{
         var kernel = new Float32Array([
@@ -918,6 +929,17 @@ function sobel(gl, x_order, y_order, kernel_size, scale, inTex, outTex) {
             2.0, 0.0, 0.0,
             1.0, 0.0, 0.0
             ]);
+        /*var kernel = new Float32Array([
+            0.0, 3.0, 0.0,
+            0.0, 10.0, 0.0,
+            0.0, 3.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0,
+            3.0, 0.0, 0.0,
+            10.0, 0.0, 0.0,
+            3.0, 0.0, 0.0
+            ]);*/
     }
 
     var outTex = kernel_conv(gl, kernel_size, kernel_size, [-1, -1], kernel, inTex, outTex);
