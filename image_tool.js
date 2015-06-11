@@ -8,7 +8,7 @@
 
 var im_name = "cones.png";
 var mode;
-var modes = ["inten_diff", "gradient", "bleyer", "icpr", "blink"];
+var modes = ["inten_diff", "gradient", "bleyer", "icpr", "ncc", "blink"];
 
 
 /*
@@ -75,6 +75,10 @@ function initialize_gl() {
     gl.magnitude_program = initShaders(gl, "magnitude-vertex-shader", "magnitude-fragment-shader");
     gl.abs_diff_program = initShaders(gl, "abs-diff-vertex-shader", "abs-diff-fragment-shader");
     gl.addweighted_program = initShaders(gl, "addweighted-vertex-shader", "addweighted-fragment-shader");
+    gl.multiply_program = initShaders(gl, "multiply-vertex-shader", "multiply-fragment-shader");
+    gl.pow_program = initShaders(gl, "pow-vertex-shader", "pow-fragment-shader");
+    gl.divide_program = initShaders(gl, "divide-vertex-shader", "divide-fragment-shader");
+    gl.add_program = initShaders(gl, "add-vertex-shader", "add-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -147,6 +151,10 @@ function animation(gl){
         }
         if (e_menu.value == 'e4'){
             mode = modes.indexOf("icpr");
+            old_state.mode = mode;
+        }
+        if (e_menu.value == 'e5'){
+            mode = modes.indexOf("ncc");
             old_state.mode = mode;
         }
     }
@@ -376,9 +384,11 @@ function animation(gl){
                 icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
                 break;
             case 4:
+                ncc(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                break;
+            case 5:
                 myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
                 break;
-
         } 
 
         display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
@@ -481,7 +491,7 @@ function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
         0, 0, 1
         );
 
-    gl.textures["scratch1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im1_alter1"]); 
+    gl.textures["scratch1"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["scratch1"]); 
 
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["scratch1"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]); 
@@ -503,6 +513,48 @@ function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     add_weighted(gl, 0.5, -1.0, 0.5, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["out"]);
 }
 
+
+
+
+function ncc(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+
+    var nccsize = 3;
+
+    var transMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+
+    gl.textures["scratch2"] = black_white(gl, gl.textures["orig_image2"], gl.textures["scratch2"]); 
+    gl.textures["scratch1"] = transform(gl, transMat, gl.textures["scratch2"], gl.textures["scratch1"]); //R
+
+    gl.textures["im1_alter3"] = black_white(gl, gl.textures["orig_image1"], gl.textures["im1_alter3"]); //L
+
+    gl.textures["im1_alter1"] = boxfilter(gl, gl.textures["im1_alter3"], gl.textures["im1_alter1"], nccsize); //Lb
+    gl.textures["im2_alter1"] = boxfilter(gl, gl.textures["scratch1"], gl.textures["im2_alter1"], nccsize); //Rb
+
+    gl.textures["im1_alter2"] = multiply(gl, gl.textures["im1_alter3"], gl.textures["im1_alter3"], gl.textures["im1_alter2"]); //LL
+    gl.textures["im2_alter2"] = multiply(gl, gl.textures["scratch1"], gl.textures["scratch1"], gl.textures["im2_alter2"]); //RR
+    gl.textures["scratch2"] = multiply(gl, gl.textures["im1_alter3"], gl.textures["scratch1"], gl.textures["scratch2"]); //RB
+
+    gl.textures["im1_alter3"] = boxfilter(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], nccsize); //LLb
+    gl.textures["im2_alter3"] = boxfilter(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], nccsize); //RRb
+    gl.textures["scratch1"] = boxfilter(gl, gl.textures["scratch2"], gl.textures["scratch1"], nccsize); //LRb
+
+    gl.textures["im1_alter2"] = multiply(gl, gl.textures["im1_alter1"], gl.textures["im1_alter1"], gl.textures["im1_alter2"]); //Lb2
+    gl.textures["im2_alter2"] = multiply(gl, gl.textures["im2_alter1"], gl.textures["im2_alter1"], gl.textures["im2_alter2"]); //Rb2
+    gl.textures["scratch2"] = multiply(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["scratch2"]); //LbRb2
+
+    gl.textures["im1_alter1"] = add_weighted(gl, 1.0, -1.0, 0.0, gl.textures["im1_alter3"], gl.textures["im1_alter2"], gl.textures["im1_alter1"]);//LLb - Lb2 = LL2
+    gl.textures["im2_alter1"] = add_weighted(gl, 1.0, -1.0, 0.0, gl.textures["im2_alter3"], gl.textures["im2_alter2"], gl.textures["im2_alter1"]);//RRb - Rb2 = RR2
+    gl.textures["im1_alter2"] = add_weighted(gl, 1.0, -1.0, 0.0, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["im1_alter2"]);//LRb -LbRb2 = LR2
+
+    gl.textures["scratch2"] = multiply(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["scratch2"]); //den
+    gl.textures["scratch1"] = addscalar(gl, 0.01, gl.textures["scratch2"], gl.textures["scratch1"]);
+    gl.textures["scratch2"] = power(gl, vec3(0.5, 0.5, 0.5), gl.textures["scratch1"], gl.textures["scratch2"]); //new den
+    divide(gl, gl.textures["im1_alter2"], gl.textures["scratch1"], gl.textures["out"]); 
+}
 
 /*
  * creates image textures, sets the canvas to the 
@@ -670,6 +722,86 @@ function magnitude(gl, inTex1, inTex2, outTex){
     var u_Image1 = gl.getUniformLocation(gl.magnitude_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex1.textureid);
     var u_Image2 = gl.getUniformLocation(gl.magnitude_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+}
+
+
+function blur(gl, inTex, outTex, ksize, anchor) {
+    var size = ksize[0] * ksize[1];
+    var k = 1.0 / size;
+    var kernel = [];
+
+    for (var i = 0; i < size; i++){
+        kernel.push(k, 0.0, 0.0);
+    }
+    
+    outTex = kernel_conv(gl, ksize[1], ksize[0], anchor, kernel, inTex, outTex);
+    return outTex;
+}
+
+
+function boxfilter(gl, inTex, outTex, n){
+    outTex = blur(gl, inTex, outTex, [n, n], [-1, -1]);
+    return outTex; 
+}
+
+
+function multiply(gl, inTex1, inTex2, outTex){
+    switch_shader(gl, gl.multiply_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.multiply_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.multiply_program, 'u_Image2');
+    gl.uniform1i(u_Image2, inTex2.textureid);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+}
+
+
+function power(gl, expon, inTex1, outTex){
+    switch_shader(gl, gl.pow_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.pow_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Pow = gl.getUniformLocation(gl.pow_program, 'u_Pow');
+    gl.uniform3fv(u_Pow, flatten(expon));
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+}
+
+
+function addscalar(gl, val, inTex1, outTex){
+    switch_shader(gl, gl.add_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.add_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Val = gl.getUniformLocation(gl.add_program, 'u_Val');
+    gl.uniform1f(u_Val, val);
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex; 
+}
+
+
+function divide(gl, inTex1, inTex2, outTex){
+    switch_shader(gl, gl.divide_program, gl.textures["orig_image1"], gl.textures["orig_image2"]);
+    var u_Image1 = gl.getUniformLocation(gl.divide_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex1.textureid);
+    var u_Image2 = gl.getUniformLocation(gl.divide_program, 'u_Image2');
     gl.uniform1i(u_Image2, inTex2.textureid);
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);

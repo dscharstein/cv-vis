@@ -326,7 +326,227 @@
         </script>
 
 
-           <script id="abs-diff-vertex-shader" type="x-shader/x-vertex">
+
+         <script id="multiply-vertex-shader" type="x-shader/x-vertex">
+        //***********************************MAGNITUDE SHADERS:*****************************************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="multiply-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+
+            vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
+            vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
+
+            void main(){
+                vec3 color = (texture2D(u_Image1, v_TexCoord).rgb * texture2D(u_Image2, v_TexCoord).rgb);
+
+                gl_FragColor = vec4(color, 1.0);
+            } 
+        </script>
+
+
+
+
+         <script id="pow-vertex-shader" type="x-shader/x-vertex">
+        //***********************************POW SHADERS:*****************************************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="pow-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+
+            uniform vec3 u_Pow;
+
+            void main(){
+                vec3 color = pow(texture2D(u_Image1, v_TexCoord).rgb, u_Pow);
+
+                gl_FragColor = vec4(color, 1.0);
+            } 
+        </script>
+
+
+
+        <script id="add-vertex-shader" type="x-shader/x-vertex">
+        //***********************************ADD SCALAR SHADERS:*****************************************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="add-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+            uniform float u_Val;
+
+            void main(){
+                vec3 color = (texture2D(u_Image1, v_TexCoord).rgb + u_Val);
+
+                gl_FragColor = vec4(color, 1.0);
+            } 
+        </script>
+
+
+         <script id="divide-vertex-shader" type="x-shader/x-vertex">
+        //***********************************DIVIDE SHADERS:*****************************************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="divide-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+            uniform int u_ImFlag2;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+
+            void main(){
+                vec3 color = (texture2D(u_Image1, v_TexCoord).rgb / texture2D(u_Image2, v_TexCoord).rgb);
+
+                gl_FragColor = vec4(color, 1.0);
+            } 
+        </script>
+
+
+
+
+        <script id="abs-diff-vertex-shader" type="x-shader/x-vertex">
         //***********************************ABS DIFF SHADERS:*****************************************************************
             attribute vec2 a_Position;
             attribute vec2 a_TexCoord; // texture coordinate of the vertex
@@ -386,7 +606,7 @@
 
 
 
-               <script id="addweighted-vertex-shader" type="x-shader/x-vertex">
+        <script id="addweighted-vertex-shader" type="x-shader/x-vertex">
         //***********************************ADD WEIGHTED SHADERS:*****************************************************************
             attribute vec2 a_Position;
             attribute vec2 a_TexCoord; // texture coordinate of the vertex
@@ -435,7 +655,7 @@
             uniform float u_S; //adjusts level of detail that shows up
 
             void main(){
-                vec3 color = texture2D(u_Image1, v_TexCoord).rgb *u_Alpha + texture2D(u_Image2, v_TexCoord).rgb * u_Beta + u_Gamma;
+                vec3 color = texture2D(u_Image1, v_TexCoord).rgb * u_Alpha + texture2D(u_Image2, v_TexCoord).rgb * u_Beta + u_Gamma;
 
                 gl_FragColor = vec4(color, 1.0);
             } 
@@ -559,6 +779,8 @@
                 <option value="e2">Gradient Difference</option>
                 <option value="e3">Bleyer</option>
                 <option value="e4">ICPR</option>
+                <option value="e5">NCC</option>
+
             </select>
         </p>
 
