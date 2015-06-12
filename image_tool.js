@@ -507,7 +507,7 @@ function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]); //overall mag 1 //***
     gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]); //overall mag 2 //***
 
-    gl.textures["im1_alter2"] = add_weighted(gl, 1.0, 1.0, 0.0, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["im1_alter2"]); //mag sums
+    gl.textures["im1_alter2"] = add_weighted(gl, 1.0, 1.0, 0.0, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["im1_alter2"]); //mag sumsv
     gl.textures["im1_alter3"] = magnitude(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["im1_alter3"]);
 
     add_weighted(gl, 0.5, -1.0, 0.5, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["out"]);
