@@ -90,7 +90,7 @@ function initialize_gl() {
 
     gl.sample_width = 1000;
     gl.sample_height = 400;
-    gl.origin = [0.0,0.0];
+    gl.origin = [0.5,0.5];
 
     // variable to hold the shader that is currently being used
     gl.current_program;
