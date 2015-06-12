@@ -118,15 +118,18 @@
             vec2 uv_1;
             vec2 uv_2;
 
-            vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
+            vec4 im1Color = vec4(0.0,0.0,0.0,1.0);
             vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
 
             void main(){
 
                 vec2 scale_sample = (u_ImOutRes / u_ImInRes);
-                
-
-                gl_FragColor = texture2D(u_Image1, u_Origin + (scale_sample * v_TexCoord));
+                uv_1 = u_Origin + (scale_sample * v_TexCoord);
+                if(uv_1.x >= 0.0 && uv_1.x <= 1.0 && uv_1.y >= 0.0 && uv_1.y <= 1.0){
+                    gl_FragColor = texture2D(u_Image1, u_Origin + (scale_sample * v_TexCoord));
+                }else{
+                    gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+                }
             } 
         </script>
 
