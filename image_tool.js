@@ -265,6 +265,12 @@ function animation(gl){
     var pressedKeys = {};
 
     document.onkeydown = function(event) {
+        /*
+        switch(event.keyCode){
+            case 73: case 74: case 75: case 76: event.preventDefault(); break; // IJKL
+            default: break; // do not block other keys
+        }
+        */
         pressedKeys[event.keyCode] = true;
     }
 
@@ -274,7 +280,7 @@ function animation(gl){
     
     
     //funtion to be called to handle key presses:
-    function handleKeys() {
+    function handleKeys(event) {
         //change motion speed:
         if (pressedKeys[69] && moveDist <= 3) { //speed up motion if q key pressed
             moveDist = moveDist+.05;
@@ -327,6 +333,33 @@ function animation(gl){
             moveDist = 1;
             s_val = 0.75;
         }
+
+
+        //***** Image navigation controls
+        var nav_speed = 0.003;
+
+        if(pressedKeys[73]){ // i
+            gl.origin = [gl.origin[0], gl.origin[1] + nav_speed];
+        }
+        if(pressedKeys[74]){ // j
+            gl.origin = [gl.origin[0] - nav_speed, gl.origin[1]];
+        }
+        if(pressedKeys[75]){ // k
+            gl.origin = [gl.origin[0], gl.origin[1] - nav_speed];
+        }
+        if(pressedKeys[76]){ // l
+            gl.origin = [gl.origin[0] + nav_speed, gl.origin[1]];
+        }
+        //*****
+
+
+        /*
+        if(pressedKeys[32] && mouse_down){
+            var scaled_dx = dx / gl.images["image0"].width;
+            var scaled_dy = -(dy / gl.images["image0"].height);
+            gl.origin = [gl.origin[0] + scaled_dx, gl.origin[1] + scaled_dy];
+        }
+        */
 
         //set to blink mode and displays image 2
         if (pressedKeys[66]){
