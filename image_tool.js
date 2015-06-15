@@ -521,17 +521,17 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
     gl.textures["im2_alter1"] = black_white(gl, gl.textures["crop2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
-    gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]);
     
 
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
     gl.textures["im1_alter1"] = black_white(gl, gl.textures["crop1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
-    gl.textures["im1_alter1"] = magnitude(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], gl.textures["im1_alter1"]);
+    gl.textures["im1_alter1"] = diff(gl, gl.textures["im1_alter2"], gl.textures["im2_alter2"], gl.textures["im1_alter1"],im1flag, im2flag, s_val);
+    gl.textures["im2_alter1"] = diff(gl, gl.textures["im1_alter3"], gl.textures["im2_alter3"], gl.textures["im2_alter1"], im1flag, im2flag, s_val);
 
 
-    diff(gl, gl.textures["im1_alter1"], gl.textures["im2_alter2"], gl.textures["out"], im1flag, im2flag, s_val);
+    magnitude(gl, gl.textures["im1_alter1"], gl.textures["im2_alter1"], gl.textures["out"]);
 }
 
 
