@@ -196,7 +196,6 @@ function animation(gl){
 
     var dx_text = document.getElementById('dx_text');
     var dy_text = document.getElementById('dy_text');
-
     
     var mouse_down = false; // set the mouse down flag to false
     var old_mouse_x = 0.0;    // set up variables to hold the mouses x and y
@@ -256,7 +255,11 @@ function animation(gl){
     /********************************************/
     var moveDist = 0.5; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
-    
+
+    var speed_text = document.getElementById('speed_text');
+    var tex_inten_text = document.getElementById('tex_inten_text');
+
+    speed_text.innerHTML = moveDist;
 
     //create "dictionary" of keys and store whether they are pressed or not
     var pressedKeys = {};
@@ -306,10 +309,10 @@ function animation(gl){
 
         //change s_val for textures to show up more or less boldly
         if (pressedKeys[90] && s_val >= 0.5) { //if Z key is pressed, decrease s_val
-            s_val -= 0.025;
+            s_val -= 0.1;
         } 
         else if (pressedKeys[88] && s_val <= 4) { //if X key is pressed, increase s_val
-            s_val += 0.025;
+            s_val += 0.1;
         } 
 
         //reset image position
@@ -347,6 +350,8 @@ function animation(gl){
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
         dy_text.innerHTML = (-dy).toFixed(4);
+        speed_text.innerHTML = moveDist;
+        tex_inten_text.innerHTML = s_val;
     }
 
     /********************************************/
