@@ -240,6 +240,7 @@
             uniform float u_Dy;
 
             uniform float u_S; //adjusts level of detail that shows up
+            uniform float u_Gamma;
 
             vec4 im1Color = vec4(0.0,0.0,0.0,0.0);
             vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
@@ -263,7 +264,7 @@
                 }
 
                 if(u_ImFlag1 == 1 && u_ImFlag2 == 1){
-                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb )* u_S) + 0.5, 1.0);
+                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb )* u_S) + u_Gamma, 1.0);
                 }
 
                 if(u_ImFlag1 == 0 && u_ImFlag2 == 0){
