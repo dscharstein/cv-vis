@@ -324,9 +324,9 @@
             vec4 im2Color = vec4(0.0,0.0,0.0,0.0);
 
             void main(){
-                float color = 0.21 * texture2D(u_Image1, v_TexCoord).r + 
-                              0.71 * texture2D(u_Image1, v_TexCoord).g + 
-                              0.07 * texture2D(u_Image1, v_TexCoord).b;
+                float color = 0.299 * texture2D(u_Image1, v_TexCoord).r + 
+                              0.587 * texture2D(u_Image1, v_TexCoord).g + 
+                              0.114 * texture2D(u_Image1, v_TexCoord).b;
 
                 gl_FragColor = vec4(color, color, color, 1.0);
             } 
@@ -829,7 +829,7 @@
         <div>
             <center>
             <p id="dxdy_text">
-                <pre><strong>offset</strong>      <strong>dx:</strong> <span id="dx_text"></span>    <strong>dy:</strong> <span id ="dy_text"></span></pre>
+                <pre><strong>offset >> </strong>      <strong>dx:</strong> <span id="dx_text"></span>    <strong>dy:</strong> <span id ="dy_text"></span></pre>
             </p>
             <p id="im_speed">
                 <pre> <strong>speed:</strong> <span id="speed_text"></span>          <strong>texture intensity:</strong> <span id="tex_inten_text"></span> </pre>
