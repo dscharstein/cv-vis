@@ -24,7 +24,7 @@ window.onload = function main(){
     // load the first image asynchronously using a promise
     // the image loaded from this is stored with image id 0
     // on success this will try to load image 2
-    Promise.all([ read_image(gl, 0, 'images/moto1.png')])
+    Promise.all([ read_image(gl, 0, 'images/cones1.png')])
     .then(function () {load_image2(gl)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
     
@@ -37,7 +37,7 @@ window.onload = function main(){
  * loop, otherwise it will throw an error 
  */
 function load_image2(gl){
-    Promise.all([ read_image(gl, 1, 'images/moto2.png')])
+    Promise.all([ read_image(gl, 1, 'images/cones2.png')])
     .then(function () {animation(gl);})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
 }
@@ -92,7 +92,7 @@ function initialize_gl() {
 
     gl.sample_width = 1000;
     gl.sample_height = 400;
-    gl.origin = [0.5,0.5];
+    gl.origin = [0.0,0.0];
 
     // variable to hold the shader that is currently being used
     gl.current_program;
@@ -260,6 +260,8 @@ function animation(gl){
 
     var speed_text = document.getElementById('speed_text');
     var tex_inten_text = document.getElementById('tex_inten_text');
+    var center_text = document.getElementById('center_text');
+    var wdim_text = document.getElementById('wdim_text');
 
     speed_text.innerHTML = moveDist;
 
@@ -387,6 +389,11 @@ function animation(gl){
         dy_text.innerHTML = (-dy).toFixed(4);
         speed_text.innerHTML = moveDist.toFixed(4);
         tex_inten_text.innerHTML = s_val.toFixed(4);
+        center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
+                                " " + 
+                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
+        wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);
+
     }
 
     /********************************************/
@@ -625,6 +632,8 @@ function initialize(){
     var image2 = gl.images["image1"];
 
     resize_canvas(gl, image1);
+
+    gl.origin = [-(((gl.sample_width-image1.width)/2.0)/image1.width),-(((gl.sample_height-image1.height)/2.0)/image1.height)] // center the image in the window
 
     var image1_tex = create_texture(gl, image1, 0, image1.width, image1.height);
     var image2_tex = create_texture(gl, image2, 1, image2.width, image2.height);
