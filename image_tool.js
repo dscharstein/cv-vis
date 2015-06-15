@@ -24,7 +24,7 @@ window.onload = function main(){
     // load the first image asynchronously using a promise
     // the image loaded from this is stored with image id 0
     // on success this will try to load image 2
-    Promise.all([ read_image(gl, 0, 'images/cones1.png')])
+    Promise.all([ read_image(gl, 0, 'images/moto1.png')])
     .then(function () {load_image2(gl)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
     
@@ -37,7 +37,7 @@ window.onload = function main(){
  * loop, otherwise it will throw an error 
  */
 function load_image2(gl){
-    Promise.all([ read_image(gl, 1, 'images/cones2.png')])
+    Promise.all([ read_image(gl, 1, 'images/moto2.png')])
     .then(function () {animation(gl);})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
 }
