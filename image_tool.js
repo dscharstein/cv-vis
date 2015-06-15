@@ -59,6 +59,8 @@ function initialize_gl() {
     
     // store a reference to the canvas in the gl object
     gl.canvas = canvas;
+
+    gl.getExtension("OES_texture_float");
     
     // set the viewport to be sized correctly
     gl.viewport(0,0, gl.canvas.width, gl.canvas.height);
@@ -1150,11 +1152,11 @@ function create_texture(gl, image, textureid, width, height){
     gl.activeTexture(gl.TEXTURE0 + textureid);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     if(image !== null){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.FLOAT, image);
         texture.width = image.width;
         texture.height = image.height;
     }else{
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, null);
         texture.width = width;
         texture.height = height;
         console.log("creating empty texture");
@@ -1171,7 +1173,7 @@ function create_texture(gl, image, textureid, width, height){
 
 function create_texture_from_array (gl, data, type, format, width, height, textureid){
 
-    gl.getExtension("OES_texture_float");
+
 
     var dataTexture = gl.createTexture();
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
