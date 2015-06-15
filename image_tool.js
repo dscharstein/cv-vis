@@ -350,8 +350,8 @@ function animation(gl){
         //set displayed text to match current dx/dy
         dx_text.innerHTML = dx.toFixed(4);
         dy_text.innerHTML = (-dy).toFixed(4);
-        speed_text.innerHTML = moveDist;
-        tex_inten_text.innerHTML = s_val;
+        speed_text.innerHTML = moveDist.toFixed(4);
+        tex_inten_text.innerHTML = s_val.toFixed(4);
     }
 
     /********************************************/
