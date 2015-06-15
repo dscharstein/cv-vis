@@ -254,7 +254,7 @@ function animation(gl){
     /********************************************/
     /************ Key Press Handling ***********/
     /********************************************/
-    var moveDist = 1; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
+    var moveDist = 0.5; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
     
 
