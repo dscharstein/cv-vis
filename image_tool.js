@@ -206,10 +206,10 @@ function animation(gl){
     var dy = 0.0;
 
     //variables for user to control affine transformations
-    var var_a;
-    var var_b;
-    var var_d; 
-    var var_e;
+    var var_a = 1;
+    var var_b = 0;
+    var var_d = 0; 
+    var var_e = 1;
 
     dx_text.innerHTML = dx;
     dy_text.innerHTML = -dy;
@@ -435,6 +435,8 @@ function animation(gl){
         var_d, var_e, 0,
         0, 0, 1
         );
+
+        var transMat = mult(affineMat, translationMat);
 
         // convert the boolean to an int to send to the shader
         im1flag = (im1flag) ? 1 : 0;
