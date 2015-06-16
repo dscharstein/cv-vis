@@ -173,7 +173,10 @@
 
             uniform int u_ImFlag1;
 
-            uniform mat3 u_TransMat;
+            uniform mat3 u_translationMat;
+            uniform mat3 u_affineMat;
+            uniform mat3 u_shiftMat;
+            uniform mat3 u_revMat;
 
             uniform float u_Dx;
             uniform float u_Dy;
@@ -185,6 +188,7 @@
             vec4 im1Color = vec4(0.0,0.0,0.0,1.0);
 
             void main(){
+                mat3 u_TransMat = u_translationMat * u_revMat * u_affineMat * u_shiftMat;
                 uv = (u_TransMat*vec3(v_TexCoord, 1.0)).xy;
                 if(uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0){
                         im1Color = texture2D(u_Image1, uv);
