@@ -337,28 +337,32 @@ function animation(gl){
             dy = 0;
         } 
         
-        //reset all controls
+        //******reset all controls********
         //shift-r
         if (pressedKeys[82] && pressedKeys[16]){
             moveDist = 1;
             s_val = 0.75;
+            var_a = 1;
+            var_b = 0;
+            var_d = 0; 
+            var_e = 1;
         }
 
-        //controls for image shearing
+        //*******controls for image shearing***********
         //x direction shearing (v/b):
         if(pressedKeys[71]){ // G
-            var_b += 0.01;
+            var_b += 0.005;
         }
         if(pressedKeys[72]){// H
-            var_b -= 0.01;
+            var_b -= 0.005;
         }
 
         //x direction shearing (v/b):
         if(pressedKeys[78]){ // N
-            var_d += 0.01;
+            var_d += 0.005;
         }
         if(pressedKeys[77]){// M
-            var_d -= 0.01;
+            var_d -= 0.005;
         }
 
         //***** Image navigation controls
@@ -452,7 +456,7 @@ function animation(gl){
         0, 0, 1
         );
 
-        var transMat = mult(affineMat, translationMat);
+        var transMat = mult(translationMat, affineMat);
 
         // convert the boolean to an int to send to the shader
         im1flag = (im1flag) ? 1 : 0;
