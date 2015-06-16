@@ -200,10 +200,16 @@ function animation(gl){
     var dy_text = document.getElementById('dy_text');
     
     var mouse_down = false; // set the mouse down flag to false
-    var old_mouse_x = 0.0;    // set up variables to hold the mouses x and y
+    var old_mouse_x = 0.0;  // set up variables to hold the mouses x and y
     var old_mouse_y = 0.0;
     var dx = 0.0;
     var dy = 0.0;
+
+    //variables for user to control affine transformations
+    var var_a;
+    var var_b;
+    var var_d; 
+    var var_e;
 
     dx_text.innerHTML = dx;
     dy_text.innerHTML = -dy;
@@ -389,11 +395,9 @@ function animation(gl){
         dy_text.innerHTML = (-dy).toFixed(4);
         speed_text.innerHTML = moveDist.toFixed(4);
         tex_inten_text.innerHTML = s_val.toFixed(4);
-        center_text.innerHTML = "(" +
-                                String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
-                                " , " + 
-                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2)) +
-                                ")";
+        center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
+                                " " + 
+                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
         wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);
 
     }
@@ -418,6 +422,20 @@ function animation(gl){
 
         var scale_dx = dx / gl.images["image0"].width;
         var scale_dy = -(dy / gl.images["image0"].height);
+
+        //create the transformation matrix by multiplying the affine trans. and translation matrices:
+        var translationMat = mat3(
+        1, 0, -scale_dx,
+        0, 1, -scale_dy,
+        0, 0, 1
+        );
+
+        var affineMat = mat3(
+        var_a, var_b, 0,
+        var_d, var_e, 0,
+        0, 0, 1
+        );
+
         // convert the boolean to an int to send to the shader
         im1flag = (im1flag) ? 1 : 0;
         // convert the boolean to an int to send to the shader
@@ -426,26 +444,26 @@ function animation(gl){
 
         switch(mode){
             case 0:
-                inten_diff(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                inten_diff(gl, im1flag, im2flag, transMat, s_val);
                 break;
             case 1:
-                gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                gradient(gl, im1flag, im2flag, transMat, s_val);
                 break;
             case 2:
-                bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                bleyer(gl, im1flag, im2flag, transMat, s_val);
                 break;
             case 3:
-                icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                icpr(gl, im1flag, im2flag, transMat, s_val);
                 break;
             case 4:
-                ncc(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                ncc(gl, im1flag, im2flag, transMat, s_val);
                 break;
             case 5:
-                myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+                myblink(gl, im1flag, im2flag, transMat, s_val);
                 break;
         } 
 
-        display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val);
+        display(gl, im1flag, im2flag, transMat, s_val);
         //render_image(gl);
         requestAnimationFrame(tick);
     };
@@ -454,46 +472,33 @@ function animation(gl){
 
 }
 
-function display(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+function display(gl, im1flag, im2flag, transMat, s_val){
     switch_shader(gl, gl.display_program, gl.sample_width, gl.sample_height, gl.sample_width, gl.sample_height);
     var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
     gl.uniform1i(u_Image1, gl.textures["out"].textureid);
     render_image(gl);
 }
 
-function inten_diff(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
-    var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
+function inten_diff(gl, im1flag, im2flag, transMat, s_val){
+    
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
     diff(gl, gl.textures["crop1"], gl.textures["crop2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
 
-function myblink(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+function myblink(gl, im1flag, im2flag, transMat, s_val){
     if(im1flag){
         sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["out"]);
     }else{
-        var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
+    
         gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
         sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["out"]);
     }
 
 }
 
-function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
-    var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
+function bleyer(gl, im1flag, im2flag, transMat, s_val){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
@@ -518,14 +523,8 @@ function bleyer(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 }
 
 
-function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+function gradient(gl, im1flag, im2flag, transMat, s_val){
 
-    
-    var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
 
@@ -546,13 +545,7 @@ function gradient(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 }
 
 
-function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
-
-    var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
+function icpr(gl, im1flag, im2flag, transMat, s_val){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]); 
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
@@ -581,15 +574,9 @@ function icpr(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
 
 
 
-function ncc(gl, im1flag, im2flag, scale_dx, scale_dy, s_val){
+function ncc(gl, im1flag, im2flag, transMat, s_val){
 
     var nccsize = 3;
-
-    var transMat = mat3(
-        1, 0, -scale_dx,
-        0, 1, -scale_dy,
-        0, 0, 1
-        );
 
     gl.textures["scratch1"] = black_white(gl, gl.textures["crop2"], gl.textures["scratch1"]); 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]); //R
