@@ -344,6 +344,22 @@ function animation(gl){
             s_val = 0.75;
         }
 
+        //controls for image shearing
+        //x direction shearing (v/b):
+        if(pressedKeys[71]){ // G
+            var_b += 0.01;
+        }
+        if(pressedKeys[72]){// H
+            var_b -= 0.01;
+        }
+
+        //x direction shearing (v/b):
+        if(pressedKeys[78]){ // N
+            var_d += 0.01;
+        }
+        if(pressedKeys[77]){// M
+            var_d -= 0.01;
+        }
 
         //***** Image navigation controls
         var nav_speed = 0.003;
