@@ -389,9 +389,11 @@ function animation(gl){
         dy_text.innerHTML = (-dy).toFixed(4);
         speed_text.innerHTML = moveDist.toFixed(4);
         tex_inten_text.innerHTML = s_val.toFixed(4);
-        center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
-                                " " + 
-                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
+        center_text.innerHTML = "(" +
+                                String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
+                                " , " + 
+                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2)) +
+                                ")";
         wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);
 
     }

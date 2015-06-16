@@ -827,46 +827,68 @@
 
     </head>
     <body>
-        <div>
-            <center>
-            <p id="dxdy_text">
-                <pre><strong>offset >> </strong>   <strong>dx:</strong> <span id="dx_text"></span>    <strong>dy:</strong> <span id ="dy_text"></span></pre>
-            </p>
-            <p id="im_speed">
-                <pre> <strong>speed:</strong> <span id="speed_text"></span>          <strong>texture intensity:</strong> <span id="tex_inten_text"></span> </pre>
-            </p>
-            <p id="window_text">
-                <pre><strong>Window Center >> </strong> <span id="center_text"></span>  <strong>Window Dim >> </strong> <span id="wdim_text"></span></pre>
-            </p>
-        </center>
+        <div id="canvas-box">
+            <div id="canvas-top">
+                <ul class="span-box">
+                    <li>  
+                        <strong>offset >> </strong>   
+                        <strong>dx:</strong> <span id="dx_text"></span>    
+                        <strong>dy:</strong> <span id ="dy_text"></span>
+                    </li>
+                    <li>
+                        <strong>speed:</strong> <span id="speed_text"></span>
+                    </li>
+                    <li>
+                        <strong>texture intensity:</strong> <span id="tex_inten_text"></span>
+                    </li>
+                </ul>
+            </div>
+            <canvas id="gl-canvas" width="400" height="300">
+                You need a better web browser
+            </canvas>
+            <div id="canvas-bottom">
+                <ul class="span-box">
+                    <li>
+                        <strong>Window Center >> </strong> <span id="center_text"></span>
+                    </li>
+                    <li>
+                        <strong>Window Dim >> </strong> <span id="wdim_text"></span>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <canvas id="gl-canvas" width="400" height="300">
-            You need a better web browser
-        </canvas>
-        <p>
-            <input id="im1_box" type="checkbox" name="" value="point" /> Image 1
-            <input id="im2_box" type="checkbox" name="point" value="point" /> Image 2
-        </p>
-
-       <p>
-            <select id="effect_menu">
-                <option value="e1">Color Difference</option>
-                <option value="e2">Gradient Difference</option>
-                <option value="e3">Bleyer</option>
-                <option value="e4">ICPR</option>
-                <option value="e5">NCC</option>
-
-            </select>
-        </p>
-
-        <pre>
-        <center>
-<strong>WASD</strong> or <strong>click & drag</strong> to shift image                                   <strong>shift:</strong> lock image motion to horizontal only
-<strong>q/e:</strong> slow down/speed up image motion                                    <strong>z/x:</strong> decrease/increase texture intensity
-<strong>r:</strong> reset image position                                                 <strong>shift-r:</strong> reset all controls
-<strong>b:</strong> blink between images
-       </center> 
-        </pre>
-    
+        <div id="inputs-box">
+            <p>
+                <input id="im1_box" type="checkbox" name="" value="point" /> Image 1
+                <input id="im2_box" type="checkbox" name="point" value="point" /> Image 2
+            </p>
+            <p>
+                <select id="effect_menu">
+                    <option value="e1">Color Difference</option>
+                    <option value="e2">Gradient Difference</option>
+                    <option value="e3">Bleyer</option>
+                    <option value="e4">ICPR</option>
+                    <option value="e5">NCC</option>
+                </select>
+            </p>
+        </div>
+        <div id="key-bind-box">
+            <div class="column-box">
+                <div class="col-intern">
+                    <p><strong>WASD</strong> or <strong>click & drag</strong> to shift image</p>
+                    <p><strong>q/e:</strong> slow down/speed up image motion</p>
+                    <p><strong>r:</strong> reset image position</p> 
+                    <p><strong>b:</strong> blink between images</p> 
+                </div>
+            </div>
+            <div class="column-box">
+                <div class="col-intern">
+                    <p><strong>shift:</strong> lock image motion to horizontal only</p>
+                    <p><strong>z/x:</strong> decrease/increase texture intensity</p>
+                    <p><strong>shift-r:</strong> reset all controls</p>
+                    <p><strong>IJKL</strong> to shift window</p>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
