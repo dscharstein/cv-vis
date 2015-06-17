@@ -294,11 +294,11 @@ function animation(gl){
     function handleKeys(event) {
         //change motion speed:
         if (pressedKeys[69] && moveDist <= 3) { //speed up motion if q key pressed
-            moveDist = moveDist+.05;
+            moveDist = moveDist+.01;
         } 
 
-        if (pressedKeys[81] && moveDist >= 0.05) { //slow down motion if e key pressed
-            moveDist = moveDist-0.05;
+        if (pressedKeys[81] && moveDist > 0.05) { //slow down motion if e key pressed
+            moveDist = moveDist-0.01;
         } 
 
         if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83]){
@@ -350,7 +350,7 @@ function animation(gl){
         }
 
         //*******controls for image shearing***********
-        //x direction shearing (v/b):
+        //x direction shearing:
         if(pressedKeys[71]){ // G
             var_b += 0.005;
         }
@@ -358,7 +358,7 @@ function animation(gl){
             var_b -= 0.005;
         }
 
-        //x direction shearing (v/b):
+        //y direction shearing:
         if(pressedKeys[78]){ // N
             var_d += 0.005;
         }
