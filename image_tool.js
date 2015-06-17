@@ -9,7 +9,8 @@
 var im_dir_path = "images/";
 var mode;
 var modes = ["inten_diff", "gradient", "bleyer", "icpr", "ncc", "blink"];
-var ims = [""]
+var debug_buffer = 0;
+
 
 /*
  * function that is called when the window is loaded
@@ -126,6 +127,8 @@ function initialize_gl() {
     gl.sample_width = 1000;
     gl.sample_height = 400;
     gl.origin = [0.0,0.0];
+
+    gl.positionBuffers = {};
 
     // variable to hold the shader that is currently being used
     gl.current_program;
@@ -773,8 +776,20 @@ function initialize(){
  * stored in the gl object => gl.positionBuffer
  */
 function create_image_plane(width, height){
-    var recQuad = createRec(gl, 0, 0, width, height);
-    gl.positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, recQuad, "positionBuffer", gl.STATIC_DRAW);
+    if(typeof gl.positionBuffers[String(width)+","+String(height)] == 'undefined'){
+        var recQuad = createRec(gl, 0, 0, width, height);
+        
+        //gl.deleteBuffer(gl.positionBuffer);
+        debug_buffer += 1
+        //console.log("deleting buffer ", debug_buffer);
+        console.log("crreating buffer ", debug_buffer);
+        
+        gl.positionBuffer = createBuffer(gl, gl.ARRAY_BUFFER, recQuad, "positionBuffer", gl.STATIC_DRAW);
+        gl.positionBuffers[String(width)+","+String(height)] = gl.positionBuffer;
+    }else{
+        gl.positionBuffer = gl.positionBuffers[String(width)+","+String(height)];
+    }
+    
 }
 
 
@@ -800,10 +815,15 @@ function initialize_shader(gl, program, inWidth, inHeight, outWidth, outHeight){
     create_image_plane(inWidth, inHeight);
     //create_image_plane(gl.sample_width, gl.sample_height);
 
-	create_texture_coords("a_TexCoord", gl, program);
+    if(typeof gl.texCoordBuffer == 'undefined'){
+        console.log("creating texcoordbuffer");
+        create_texture_coords("a_TexCoord", gl, program);
+    }
 
 
     enableAttribute(gl, program, gl.positionBuffer, "a_Position", 2, 0, 0);
+    enableAttribute(gl, program, gl.texCoordBuffer, "a_TexCoord", 2, 0, 0);
+
 }
 
 /*
@@ -1265,8 +1285,7 @@ function create_texture_coords(a_TexCoord, gl, program){
         0.0,  1.0,
         1.0,  0.0,
         1.0,  1.0]);
-    var texCoordBuffer = createBuffer(gl, gl.ARRAY_BUFFER, texCoords, "textureCoordBuffer", gl.STATIC_DRAW);
-    enableAttribute(gl, program, texCoordBuffer, a_TexCoord, 2, 0, 0);
+    gl.texCoordBuffer = createBuffer(gl, gl.ARRAY_BUFFER, texCoords, "textureCoordBuffer", gl.STATIC_DRAW);
 }
 
 function create_texture(gl, image, textureid, width, height){
