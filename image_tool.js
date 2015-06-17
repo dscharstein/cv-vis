@@ -270,6 +270,8 @@ function animation(gl){
     var tex_inten_text = document.getElementById('tex_inten_text');
     var center_text = document.getElementById('center_text');
     var wdim_text = document.getElementById('wdim_text');
+    var xshear_text = document.getElementById('xshear_text');
+    var yshear_text = document.getElementById('yshear_text');
 
     speed_text.innerHTML = moveDist;
 
@@ -438,6 +440,8 @@ function animation(gl){
         dy_text.innerHTML = (-dy).toFixed(4);
         speed_text.innerHTML = moveDist.toFixed(4);
         tex_inten_text.innerHTML = s_val.toFixed(4);
+        xshear_text.innerHTML = var_b.toFixed(4);
+        yshear_text.innerHTML = var_a.toFixed(4);
         center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
                                 " " + 
                                 String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
