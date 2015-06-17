@@ -508,28 +508,28 @@ function animation(gl){
 
         //create the transformation matrix by multiplying the affine trans. and translation matrices:
         //for translating the image
-        gl.translationMat = mat3(
+        var translationMat = mat3(
         1, 0, -scale_dx,
         0, 1, -scale_dy,
         0, 0, 1
         );
 
         //for affine transformations
-        gl.affineMat = mat3(
+        var affineMat = mat3(
         var_a, var_b, 0,
         var_d, var_e, 0,
         0, 0, 1
         );
 
         //for shifting the image so desired point is center of shear
-        gl.shiftMat = mat3(
+        var shiftMat = mat3(
         1, 0, -0.5,
         0, 1, -0.5,
         0, 0, 1
         );
 
         //for shifting the image back to its original location
-        gl.revMat = mat3(
+        var revMat = mat3(
         1, 0, 0.5,
         0, 1, 0.5,
         0, 0, 1
@@ -543,7 +543,13 @@ function animation(gl){
         transMat = mult(transMat, tempMat);
         */
 
-        var transMat = 0;
+        var transMat = [
+            translationMat,
+            revMat,
+            affineMat,
+            shiftMat
+        ];
+
         // convert the boolean to an int to send to the shader
         im1flag = (im1flag) ? 1 : 0;
         // convert the boolean to an int to send to the shader
@@ -853,15 +859,16 @@ function transform(gl, transMat, inTex, outTex){
 
 
     var u_translationMat = gl.getUniformLocation(gl.transform_program, 'u_translationMat');
-    gl.uniformMatrix3fv(u_translationMat, false, flatten(gl.translationMat));
+    gl.uniformMatrix3fv(u_translationMat, false, flatten(transMat[0]));
 
     var u_affineMat = gl.getUniformLocation(gl.transform_program, 'u_affineMat');
-    gl.uniformMatrix3fv(u_affineMat, false, flatten(gl.affineMat));
+    gl.uniformMatrix3fv(u_affineMat, false, flatten(transMat[2]));
 
     var u_shiftMat = gl.getUniformLocation(gl.transform_program, 'u_shiftMat');
-    gl.uniformMatrix3fv(u_shiftMat, false, flatten(gl.shiftMat));
+    gl.uniformMatrix3fv(u_shiftMat, false, flatten(transMat[3]));
+
     var u_revMat = gl.getUniformLocation(gl.transform_program, 'u_revMat');
-    gl.uniformMatrix3fv(u_revMat, false, flatten(gl.revMat));
+    gl.uniformMatrix3fv(u_revMat, false, flatten(transMat[1]));
 
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
