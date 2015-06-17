@@ -302,7 +302,8 @@ function animation(gl){
         } 
 
         if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83] ||
-           pressedKeys[37] || pressedKeys[38] || pressedKeys[39] || pressedKeys[40] ){
+           pressedKeys[37] || pressedKeys[38] || pressedKeys[39] || pressedKeys[40] ||
+           pressedKeys[71] || pressedKeys[72] || pressedKeys[77] || pressedKeys[78] ){
             mode = old_state.mode;
             im1flag = old_state.im1flag;
             im2flag = old_state.im2flag;
