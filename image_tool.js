@@ -263,6 +263,7 @@ function animation(gl){
     /************ Key Press Handling ***********/
     /********************************************/
     var moveDist = 0.5; //distance image will move on a WASD key press, initialized to 1 (1 pixel in given direction)
+    var spd_diff = 0.01; //scales moveDist for use in controling shearing speed
     var s_val = 0.75; //s-value that determines what level of texture detail shows up, initialized to 1/2
 
     var speed_text = document.getElementById('speed_text');
@@ -354,18 +355,18 @@ function animation(gl){
         //*******controls for image shearing***********
         //x direction shearing:
         if(pressedKeys[71]){ // G
-            var_a += 0.005;
+            var_a += (moveDist*spd_diff);
         }
         if(pressedKeys[72]){// H
-            var_a -= 0.005;
+            var_a -= (moveDist*spd_diff);
         }
 
         //y direction shearing:
         if(pressedKeys[78]){ // N
-            var_b += 0.005;
+            var_b += (moveDist*spd_diff);
         }
         if(pressedKeys[77]){// M
-            var_b -= 0.005;
+            var_b -= (moveDist*spd_diff);
         }
 
         //***** Image navigation controls
