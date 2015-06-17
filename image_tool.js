@@ -276,12 +276,12 @@ function animation(gl){
     var pressedKeys = {};
 
     document.onkeydown = function(event) {
-        /*
+        
         switch(event.keyCode){
-            case 73: case 74: case 75: case 76: event.preventDefault(); break; // IJKL
+            case 37: case 38: case 39: case 40: event.preventDefault(); break; // IJKL
             default: break; // do not block other keys
         }
-        */
+        
         pressedKeys[event.keyCode] = true;
     }
 
@@ -309,17 +309,17 @@ function animation(gl){
             im2_box.checked = im2flag;
         }
         //horizontal motion key control:
-        if (pressedKeys[65]) { //if A key is pressed, shift in neg x direction
+        if (pressedKeys[65] || pressedKeys[37]) { //if A key or left arrow is pressed, shift in neg x direction
             dx -= moveDist;
-        } else if (pressedKeys[68]) { //if D key is pressed, shift in pos x direction
+        } else if (pressedKeys[68] || pressedKeys[39]) { //if D key or right arrow is pressed, shift in pos x direction
             dx += moveDist;
         } 
     
         //vertical motion key control
         if (!pressedKeys[16]) { //only move vertically if shift key is not pressed
-            if (pressedKeys[87]) { //if W key is pressed, shift in pos y direction
+            if (pressedKeys[87] || pressedKeys[38]) { //if W key or up arrow is pressed, shift in pos y direction
                 dy -= moveDist;
-            } else if (pressedKeys[83]) { //if S key is pressed, shift in neg y direction
+            } else if (pressedKeys[83] || pressedKeys[40]) { //if S key or down arrow is pressed, shift in neg y direction
                 dy += moveDist;
             } 
         }
