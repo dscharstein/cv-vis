@@ -301,7 +301,8 @@ function animation(gl){
             moveDist = moveDist-0.05;
         } 
 
-        if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83]){
+        if(pressedKeys[65] || pressedKeys[68] || pressedKeys[87] || pressedKeys[83] ||
+           pressedKeys[37] || pressedKeys[38] || pressedKeys[39] || pressedKeys[40] ){
             mode = old_state.mode;
             im1flag = old_state.im1flag;
             im2flag = old_state.im2flag;
@@ -352,18 +353,18 @@ function animation(gl){
         //*******controls for image shearing***********
         //x direction shearing (v/b):
         if(pressedKeys[71]){ // G
-            var_b += 0.005;
+            var_a += 0.005;
         }
         if(pressedKeys[72]){// H
-            var_b -= 0.005;
+            var_a -= 0.005;
         }
 
         //x direction shearing (v/b):
         if(pressedKeys[78]){ // N
-            var_d += 0.005;
+            var_b += 0.005;
         }
         if(pressedKeys[77]){// M
-            var_d -= 0.005;
+            var_b -= 0.005;
         }
 
         //***** Image navigation controls
