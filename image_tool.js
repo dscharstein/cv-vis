@@ -335,12 +335,31 @@ function animation(gl){
             s_val += 0.1;
         } 
 
+
+        //************************reset buttons****************************
+        //*****************************************************************
+
         //reset image position
         if (pressedKeys[82]) { //if R is pressed, reset position of top image
             dx = 0;
             dy = 0;
         } 
         
+        //reset dy:
+        if (pressedKeys[89] && pressedKeys[16]){ //shift-y
+            dy = 0;
+        }
+
+        //reset var_a:
+        if (pressedKeys[71] && pressedKeys[16]){ //shift-g
+            var_a = 1;
+        }
+
+        //reset var_b
+        if (pressedKeys[78] && pressedKeys[16]){ //shift-n
+            var_b = 0;
+        }
+
         //******reset all controls********
         //shift-r
         if (pressedKeys[82] && pressedKeys[16]){
