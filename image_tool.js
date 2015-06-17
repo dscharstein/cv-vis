@@ -6,10 +6,10 @@
  *	2015-06-02
  */
 
-var im_name = "cones.png";
+var im_dir_path = "images/";
 var mode;
 var modes = ["inten_diff", "gradient", "bleyer", "icpr", "ncc", "blink"];
-
+var ims = [""]
 
 /*
  * function that is called when the window is loaded
@@ -20,14 +20,46 @@ window.onload = function main(){
 
     // initialize the gl object 
     gl = initialize_gl();
+
+    image_pair = 'cones';
+    var im_menu = document.getElementById('image_menu');
+    im_menu.value = image_pair;
     
-    // load the first image asynchronously using a promise
+    load_images(gl, image_pair);
+    
+}
+
+
+function load_images(gl, image_pair){
+    var image1 = im_dir_path;
+    var image2 = im_dir_path;
+
+    switch(image_pair){
+        case 'cones':
+            image1 += 'cones1.png';
+            image2 += 'cones2.png';
+            break;
+        case 'motos':
+            image1 += 'moto1.png';
+            image2 += 'moto2.png';
+            break;
+        case 'playtable':
+            image1 += 'playtable1.png';
+            image2 += 'playtable2.png';
+            break;
+        default:
+            image1 += 'cones1.png';
+            image2 += 'cones2.png';
+    }
+
+
+
+     // load the first image asynchronously using a promise
     // the image loaded from this is stored with image id 0
     // on success this will try to load image 2
-    Promise.all([ read_image(gl, 0, 'images/cones1.png')])
-    .then(function () {load_image2(gl)})
+    Promise.all([ read_image(gl, 0, image1)])
+    .then(function () {load_image2(gl, image2)})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
-    
 }
 
 /*
@@ -36,8 +68,8 @@ window.onload = function main(){
  * on success this function will call the main animation
  * loop, otherwise it will throw an error 
  */
-function load_image2(gl){
-    Promise.all([ read_image(gl, 1, 'images/cones2.png')])
+function load_image2(gl, image2){
+    Promise.all([ read_image(gl, 1, image2)])
     .then(function () {animation(gl);})
     .catch(function (error) {alert('Failed to load texture '+  error.message);}); 
 }
@@ -139,7 +171,6 @@ function animation(gl){
     // currently running
     var e_menu = document.getElementById('effect_menu');
     e_menu.value = 'e1';
-    var e_tag;
 
     // fucntion used to change visualizations
     // when a different visualization is selected
@@ -171,6 +202,12 @@ function animation(gl){
 
     e_menu.onchange = function(){
         program_select();
+    }
+
+    var im_menu = document.getElementById('image_menu');
+
+    im_menu.onchange = function(){
+        load_images(gl, im_menu.value);
     }
 
     
