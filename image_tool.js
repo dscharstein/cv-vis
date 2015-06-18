@@ -496,9 +496,9 @@ function animation(gl){
         tex_inten_text.innerHTML = s_val.toFixed(4);
         xshear_text.innerHTML = var_b.toFixed(4);
         yshear_text.innerHTML = var_a.toFixed(4);
-        center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
+        center_text.innerHTML = String((((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0) * 0.5 ).toFixed(2)) +
                                 " " + 
-                                String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
+                                String((((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0) * 0.5 ).toFixed(2));
         /*wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);*/
 
     }
