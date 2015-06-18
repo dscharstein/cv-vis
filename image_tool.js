@@ -162,6 +162,11 @@ function animation(gl){
     win_width.value = gl.sample_width;
     win_height.value = gl.sample_height;
 
+    gl.canvas.onwheel = function(event){
+        event.preventDefault();
+        console.log(event.deltaY);
+    }
+
     win_width.onchange = function(){
         gl.sample_width = win_width.value;
         animation(gl);
