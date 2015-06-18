@@ -64,5 +64,13 @@ p {
 	color: white;
 }
 
+#window-width {
+	width: 50px;
+}
+
+#window-height {
+	width: 50px;
+}
+
 
 

@@ -157,6 +157,21 @@ function initialize_gl() {
  */
 function animation(gl){
 
+    var win_width = document.getElementById('window-width');
+    var win_height = document.getElementById('window-height');
+    win_width.value = gl.sample_width;
+    win_height.value = gl.sample_height;
+
+    win_width.onchange = function(){
+        gl.sample_width = win_width.value;
+        animation(gl);
+    }
+
+    win_height.onchange = function(){
+        gl.sample_height = win_height.value;
+        animation(gl);
+    }
+
 
     // initialize the textures and image quad
     initialize();
@@ -484,7 +499,7 @@ function animation(gl){
         center_text.innerHTML = String(((gl.origin[0] * gl.images["image0"].width) + gl.sample_width/2.0).toFixed(2)) +
                                 " " + 
                                 String(((gl.origin[1] * gl.images["image0"].height) + gl.sample_height/2.0).toFixed(2));
-        wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);
+        /*wdim_text.innerHTML = String(gl.sample_width) + " x " + String(gl.sample_height);*/
 
     }
 
