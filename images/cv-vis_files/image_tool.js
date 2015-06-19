@@ -183,8 +183,8 @@ function animation(gl){
 
         /*console.log("ye olde tex x before: ", gl.old_tex_x);
         console.log("ye olde tex y before: ", gl.old_tex_y);*/
-        gl.old_tex_x = gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom;
-        gl.old_tex_y = gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom;
+        gl.old_tex_x = gl.old_tex_x + (gl.mouse_x * zoom - gl.old_mouse_x * zoom);
+        gl.old_tex_y = gl.old_tex_y + (gl.mouse_y  * zoom - gl.old_mouse_y * zoom);
         /*console.log("zoom: ", zoom);
         console.log("ye olde tex x: ", gl.old_tex_x);
         console.log("ye olde tex y: ", gl.old_tex_y);

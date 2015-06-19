@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lan="en">
-
-    <head>
+<html lan="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
         <title>cv-vis</title>
-        <script type="text/javascript" src="lib/webgl-utils.js"></script>
-        <script type="text/javascript" src="lib/MV.js"></script>
-        <script type="text/javascript" src="lib/InitShaders.js"></script>
+        <script type="text/javascript" src="cv-vis_files/webgl-utils.js"></script>
+        <script type="text/javascript" src="cv-vis_files/MV.js"></script>
+        <script type="text/javascript" src="cv-vis_files/InitShaders.js"></script>
         
-        <link rel="stylesheet" type="text/css" href="assets/style/main-style.css" />
+        <link rel="stylesheet" type="text/css" href="cv-vis_files/main-style.css">
 
-        <script type="text/javascript" src="image_tool.js"></script>
+        <script type="text/javascript" src="cv-vis_files/image_tool.js"></script>
 
 
         <script id="display-vertex-shader" type="x-shader/x-vertex">
@@ -917,52 +916,52 @@
             <div id="canvas-top">
                 <ul class="span-box">
                     <li>  
-                        <strong>offset >> </strong>   
-                        <strong>dx:</strong> <span id="dx_text"></span>    
-                        <strong>dy:</strong> <span id ="dy_text"></span>
+                        <strong>offset &gt;&gt; </strong>   
+                        <strong>dx:</strong> <span id="dx_text">0.0000</span>    
+                        <strong>dy:</strong> <span id="dy_text">-3.5000</span>
                     </li>
                     <li>
                         <strong>x disparity grad.:
-                        </strong> <span id ="xshear_text"></span>
+                        </strong> <span id="xshear_text">0.0000</span>
                     </li>
                     <li>
                         <strong>y disparity grad.:
-                        </strong> <span id ="yshear_text"></span>
+                        </strong> <span id="yshear_text">1.0000</span>
                     </li>
                     <li>
-                        <strong>speed:</strong> <span id="speed_text"></span>
+                        <strong>speed:</strong> <span id="speed_text">0.5000</span>
                     </li>
                     <li>
-                        <strong>texture intensity:</strong> <span id="tex_inten_text"></span>
+                        <strong>texture intensity:</strong> <span id="tex_inten_text">0.7500</span>
                     </li>
                 </ul>
             </div>
-            <canvas id="gl-canvas" width="400" height="300">
+            <canvas id="gl-canvas" width="1000" height="400">
                 You need a better web browser
             </canvas>
             <div id="canvas-bottom">
                 <ul class="span-box">
                     <li>
-                        <strong>Window Center >> </strong> <span id="center_text"></span>
+                        <strong>Window Center &gt;&gt; </strong> <span id="center_text">140.63 117.19</span>
                     </li>
                     <li>
                         <!--<strong>Window Dim >> </strong> <span id="wdim_text"></span>-->
-                        <strong>Window Dim >> </strong>
-                        <input id="window-width" type="text" /> 
+                        <strong>Window Dim &gt;&gt; </strong>
+                        <input value="1000" id="window-width" type="text"> 
                         x
-                        <input id="window-height" type="text" /> 
+                        <input value="400" id="window-height" type="text"> 
                     </li>
                 </ul>
             </div>
         </div>
         <div id="inputs-box">
             <p>
-                <input id="im1_box" type="checkbox" /> Image 1
-                <input id="im2_box" type="checkbox" /> Image 2
+                <input checked="checked" id="im1_box" type="checkbox"> Image 1
+                <input id="im2_box" type="checkbox"> Image 2
             </p>
             <p>
                 <select id="effect_menu">
-                    <option value="e1">Color Difference</option>
+                    <option selected="selected" value="e1">Color Difference</option>
                     <option value="e2">Gradient Difference</option>
                     <option value="e3">Bleyer</option>
                     <option value="e4">ICPR</option>
@@ -971,7 +970,7 @@
             </p>
             <p>
                 <select id="image_menu">
-                    <option value="cones">Cones</option>
+                    <option selected="selected" value="cones">Cones</option>
                     <option value="motos">Motorcycle</option>
                     <option value="playtable">Playtable</option>
                 </select>
@@ -980,8 +979,8 @@
         <div id="key-bind-box">
             <div class="column-box">
                 <div class="col-intern">
-                    <p><strong>WASD</strong> or <strong>click & drag</strong> to shift image</p>
-                    <p><strong>q/e:</strong> slow down/speed up image motion & shear speed</p>
+                    <p><strong>WASD</strong> or <strong>click &amp; drag</strong> to shift image</p>
+                    <p><strong>q/e:</strong> slow down/speed up image motion &amp; shear speed</p>
                     <p><strong>g/h:</strong> control x-shear</p>
                     <p><strong>r:</strong> reset image position</p> 
                     <p><strong>b:</strong> blink between images</p> 
@@ -1001,5 +1000,5 @@
                 </div>
             </div>
         </div>
-    </body>
-</html>
+    
+</body></html>
