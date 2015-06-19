@@ -117,6 +117,7 @@ function initialize_gl() {
     gl.divide_program = initShaders(gl, "divide-vertex-shader", "divide-fragment-shader");
     gl.add_program = initShaders(gl, "add-vertex-shader", "add-fragment-shader");
     gl.sampler_program = initShaders(gl, "sampler-vertex-shader", "sampler-fragment-shader");
+    gl.zoom_program = initShaders(gl, "zoom-vertex-shader", "zoom-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -674,7 +675,11 @@ function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoom){
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, zoom, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, zoom, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
-    diff(gl, gl.textures["crop1"], gl.textures["crop2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
+
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom);
+
+    diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
 
 function myblink(gl, im1flag, im2flag, transMat, s_val, zoom){
@@ -975,6 +980,27 @@ function transform(gl, transMat, inTex, outTex){
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return outTex;  
 }
+
+
+function zoomim(gl, inTex, outTex, zoom){
+    switch_shader(gl, gl.zoom_program, inTex.width, inTex.height, outTex.width, outTex.height);
+
+    var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
+    gl.uniform1i(u_Image1, inTex.textureid);
+
+    var u_Zoom = gl.getUniformLocation(gl.zoom_program, 'u_Zoom');
+    gl.uniform1f(u_Zoom, zoom);
+
+    var u_Center = gl.getUniformLocation(gl.transform_program, 'u_Center');
+    gl.uniform2f(u_Center, gl.mouse_x, gl.mouse_y);
+
+    var targetFBO = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, outTex, 0);
+    render_image(gl);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return outTex;  
+};
 
 
 function copy_tex(gl, inTex, outTex){

@@ -204,6 +204,81 @@
         </script>
 
 
+         <script id="zoom-vertex-shader" type="x-shader/x-vertex">
+        //***************************COLOR TO B&W SHADERS:*******************************************
+            attribute vec2 a_Position;
+            attribute vec2 a_TexCoord; // texture coordinate of the vertex
+            uniform vec2 u_Resolution;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord; // pass texture coordinates to the fragment shader
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                vec2 normalized_pos = a_Position / u_Resolution;
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec2 doubled_pos = normalized_pos * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec2 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4(clipCoords, 0.0, 1.0);
+
+                //v_Position = a_Position;
+                v_TexCoord = a_TexCoord;
+            }
+        </script>
+
+
+        
+        <script id="zoom-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            
+            //varying vec3 v_Position;
+            varying vec2 v_TexCoord;
+             
+            uniform sampler2D u_Image1;
+            uniform sampler2D u_Image2;
+
+            uniform int u_ImFlag1;
+
+            uniform vec2 u_Center;
+            uniform float u_Zoom;
+
+            uniform float u_Dx;
+            uniform float u_Dy;
+
+            uniform float u_S; //adjusts level of detail that shows up
+
+            vec2 uv;
+
+            vec4 im1Color = vec4(0.0,0.0,0.0,1.0);
+
+            void main(){
+                mat3 shift = mat3(1.0, 0.0, u_Center.x,
+                                0.0, 1.0, u_Center.y,
+                                0.0, 0.0, 1.0
+                                    );
+                mat3 zoom = mat3(u_Zoom, 0.0, 0.0,
+                                0.0, u_Zoom, 0.0,
+                                0.0, 0.0, 1.0
+                    );
+                mat3 unshift = mat3(1.0, 0.0, -u_Center.x,
+                                0.0, 1.0, -u_Center.y,
+                                0.0, 0.0, 1.0
+                                    );
+    
+                uv = (shift * zoom * unshift * vec3(v_TexCoord, 1.0)).xy;
+                if(uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0){
+                        im1Color = texture2D(u_Image1, uv);
+                }
+                
+                gl_FragColor = im1Color;
+
+            }
+        </script>
+
+
         
         <script id="inten-diff-vertex-shader" type="x-shader/x-vertex">
         //***************************INTENSITY DIFF SHADERS:*******************************************
