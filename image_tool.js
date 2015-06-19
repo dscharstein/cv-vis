@@ -183,8 +183,8 @@ function animation(gl){
 
         /*console.log("ye olde tex x before: ", gl.old_tex_x);
         console.log("ye olde tex y before: ", gl.old_tex_y);*/
-        gl.old_tex_x = gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom;
-        gl.old_tex_y = gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom;
+        gl.old_tex_x = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
+        gl.old_tex_y = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
         /*console.log("zoom: ", zoom);
         console.log("ye olde tex x: ", gl.old_tex_x);
         console.log("ye olde tex y: ", gl.old_tex_y);
@@ -701,8 +701,8 @@ function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoom){
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
 
-    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom);
-    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom);
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
 
     diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
@@ -1007,7 +1007,7 @@ function transform(gl, transMat, inTex, outTex){
 }
 
 
-function zoomim(gl, inTex, outTex, zoom){
+function zoomim(gl, inTex, outTex, zoom, center){
     switch_shader(gl, gl.zoom_program, inTex.width, inTex.height, outTex.width, outTex.height);
 
 
@@ -1018,7 +1018,7 @@ function zoomim(gl, inTex, outTex, zoom){
     gl.uniform1f(u_Zoom, zoom);
 
     var u_Center = gl.getUniformLocation(gl.zoom_program, 'u_Center');
-    gl.uniform2f(u_Center, gl.old_tex_x, gl.old_tex_y);
+    gl.uniform2f(u_Center, center[0], center[1]);
 
 
     var targetFBO = gl.createFramebuffer();
