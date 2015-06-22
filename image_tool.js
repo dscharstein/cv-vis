@@ -179,21 +179,9 @@ function animation(gl){
     gl.canvas.onwheel = function(event){
         gl.scrolling = 1;
         event.preventDefault();
-        //console.log(event.deltaY / scroll_scale);
 
-        /*console.log("ye olde tex x before: ", gl.old_tex_x);
-        console.log("ye olde tex y before: ", gl.old_tex_y);*/
         gl.old_tex_x = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
         gl.old_tex_y = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
-        /*console.log("zoom: ", zoom);
-        console.log("ye olde tex x: ", gl.old_tex_x);
-        console.log("ye olde tex y: ", gl.old_tex_y);
-
-        console.log("mouse x: ", gl.mouse_x);
-        console.log("mouse y: ", gl.mouse_y);
-
-        console.log("old mouse x: ", gl.old_mouse_x);
-        console.log("old mouse y: ", gl.old_mouse_y);*/
 
         gl.old_mouse_x = gl.mouse_x;
         gl.old_mouse_y = gl.mouse_y;
@@ -333,7 +321,6 @@ function animation(gl){
             mouse_y = event.clientY;
             //console.log("mouse x ", mouse_x);
             //console.log("mouse y ", mouse_y);
-            //if(gl.scrolling == 1){
 
             var rect = event.target.getBoundingClientRect();
 
@@ -345,11 +332,13 @@ function animation(gl){
             //apply a shift by height / 2, a flip by multiplying by -1 
             //and a compression by height / 2
             var y = 1-((mouse_y - rect.top) /gl.sample_height);
-
+            /*console.log("========================");
+            console.log("gl.mouse_x", gl.mouse_x);
+            console.log("gl.mouse_y", gl.mouse_y);
+            console.log("========================");*/
             gl.mouse_x = x;
             gl.mouse_y = y;
-            //}
-                    // do nothing
+
             return;
         }
         mode = old_state.mode;
@@ -701,8 +690,8 @@ function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoom){
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
 
-    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
-    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom, [gl.old_tex_x, gl.old_tex_y]);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom, [gl.old_tex_x, gl.old_tex_y]);
 
     diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
