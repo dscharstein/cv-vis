@@ -174,35 +174,57 @@ function animation(gl){
     gl.old_tex_x = 0.0;
     gl.old_tex_y = 0.0;
 
-
     var zoom = 1.0;
+    var zoomcumul = 1.0;
+
+     var zoomMat = mat3(
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+        );
+
     gl.canvas.onwheel = function(event){
         gl.scrolling = 1;
         event.preventDefault();
-        //console.log(event.deltaY / scroll_scale);
 
-        /*console.log("ye olde tex x before: ", gl.old_tex_x);
-        console.log("ye olde tex y before: ", gl.old_tex_y);*/
         gl.old_tex_x = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
         gl.old_tex_y = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
-        /*console.log("zoom: ", zoom);
-        console.log("ye olde tex x: ", gl.old_tex_x);
-        console.log("ye olde tex y: ", gl.old_tex_y);
-
-        console.log("mouse x: ", gl.mouse_x);
-        console.log("mouse y: ", gl.mouse_y);
-
-        console.log("old mouse x: ", gl.old_mouse_x);
-        console.log("old mouse y: ", gl.old_mouse_y);*/
 
         gl.old_mouse_x = gl.mouse_x;
         gl.old_mouse_y = gl.mouse_y;
 
-        if(zoom + event.deltaY / scroll_scale < 0){
-            zoom = 0.0;
+        if(event.deltaY/scroll_scale < 0){
+            zoomcumul = Math.abs(event.deltaY/scroll_scale) + 1.0;
         }else{
-            zoom += event.deltaY/scroll_scale; 
-        }        
+            zoomcumul = 1.0 - event.deltaY/scroll_scale; 
+        }
+        
+        //set zoom to match the current zoom level by multiplying the previous zoom level
+        //by 'zoomcumul'
+       zoom *= zoomcumul;
+
+       //compute new matrices to shift the zoomcenter to the origin,
+       //zoom in on the origin, then shift back with point at previous location
+        var unshift = mat3(
+        1, 0, gl.old_tex_x,
+        0, 1, gl.old_tex_y,
+        0, 0, 1
+        );
+
+        var zoomStep = mat3(
+        zoomcumul, 0.0, 0.0,
+        0.0, zoomcumul, 0.0,
+        0.0, 0.0, 1.0
+        );
+
+        var shift = mat3(
+        1, 0, -gl.old_tex_x,
+        0, 1, -gl.old_tex_y,
+        0, 0, 1
+        );
+
+        //add these three matrices to the cumulative shift matrix
+        zoomMat = mult(unshift, mult(zoomStep, mult(shift, zoomMat)));      
     }
 
     win_width.onchange = function(){
@@ -331,9 +353,6 @@ function animation(gl){
             // the variables storing the mouse's location
             mouse_x = event.clientX;
             mouse_y = event.clientY;
-            //console.log("mouse x ", mouse_x);
-            //console.log("mouse y ", mouse_y);
-            //if(gl.scrolling == 1){
 
             var rect = event.target.getBoundingClientRect();
 
@@ -348,8 +367,7 @@ function animation(gl){
 
             gl.mouse_x = x;
             gl.mouse_y = y;
-            //}
-                    // do nothing
+
             return;
         }
         mode = old_state.mode;
@@ -605,7 +623,6 @@ function animation(gl){
         var zoomCenter = mat3();
         
 
-
         //create the transformation matrix by multiplying the affine trans. and translation matrices:
         //for translating the image
         var translationMat = mat3(
@@ -659,22 +676,22 @@ function animation(gl){
 
         switch(mode){
             case 0:
-                inten_diff(gl, im1flag, im2flag, transMat, s_val, zoom);
+                inten_diff(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
             case 1:
-                gradient(gl, im1flag, im2flag, transMat, s_val, zoom);
+                gradient(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
             case 2:
-                bleyer(gl, im1flag, im2flag, transMat, s_val, zoom);
+                bleyer(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
             case 3:
-                icpr(gl, im1flag, im2flag, transMat, s_val, zoom);
+                icpr(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
             case 4:
-                ncc(gl, im1flag, im2flag, transMat, s_val, zoom);
+                ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
             case 5:
-                myblink(gl, im1flag, im2flag, transMat, s_val, zoom);
+                myblink(gl, im1flag, im2flag, transMat, s_val, zoomMat);
                 break;
         } 
 
@@ -688,26 +705,26 @@ function animation(gl){
 
 }
 
-function display(gl, im1flag, im2flag, transMat, s_val, zoom){
+function display(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     switch_shader(gl, gl.display_program, gl.sample_width, gl.sample_height, gl.sample_width, gl.sample_height);
     var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
     gl.uniform1i(u_Image1, gl.textures["out"].textureid);
     render_image(gl);
 }
 
-function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoom){
+function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
 
-    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
-    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoom, [gl.old_tex_x, gl.old_mouse_y]);
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoomMat);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoomMat);
 
     diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
 
-function myblink(gl, im1flag, im2flag, transMat, s_val, zoom){
+function myblink(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     if(im1flag){
         sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["out"]);
     }else{
@@ -718,7 +735,7 @@ function myblink(gl, im1flag, im2flag, transMat, s_val, zoom){
 
 }
 
-function bleyer(gl, im1flag, im2flag, transMat, s_val, zoom){
+function bleyer(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
@@ -743,7 +760,7 @@ function bleyer(gl, im1flag, im2flag, transMat, s_val, zoom){
 }
 
 
-function gradient(gl, im1flag, im2flag, transMat, s_val, zoom){
+function gradient(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
@@ -765,7 +782,7 @@ function gradient(gl, im1flag, im2flag, transMat, s_val, zoom){
 }
 
 
-function icpr(gl, im1flag, im2flag, transMat, s_val, zoom){
+function icpr(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]); 
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
@@ -794,7 +811,7 @@ function icpr(gl, im1flag, im2flag, transMat, s_val, zoom){
 
 
 
-function ncc(gl, im1flag, im2flag, transMat, s_val, zoom){
+function ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     var nccsize = 3;
 
@@ -1007,7 +1024,7 @@ function transform(gl, transMat, inTex, outTex){
 }
 
 
-function zoomim(gl, inTex, outTex, zoom, center){
+function zoomim(gl, inTex, outTex, zoomMat){
     switch_shader(gl, gl.zoom_program, inTex.width, inTex.height, outTex.width, outTex.height);
 
 
@@ -1015,10 +1032,11 @@ function zoomim(gl, inTex, outTex, zoom, center){
     gl.uniform1i(u_Image1, inTex.textureid);
 
     var u_Zoom = gl.getUniformLocation(gl.zoom_program, 'u_Zoom');
-    gl.uniform1f(u_Zoom, zoom);
+    gl.uniformMatrix3fv(u_Zoom, false, flatten(zoomMat));
 
+    /*
     var u_Center = gl.getUniformLocation(gl.zoom_program, 'u_Center');
-    gl.uniform2f(u_Center, center[0], center[1]);
+    gl.uniform2f(u_Center, center[0], center[1]);*/
 
 
     var targetFBO = gl.createFramebuffer();
