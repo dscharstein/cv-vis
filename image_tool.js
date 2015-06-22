@@ -536,6 +536,11 @@ function animation(gl){
             var_b = 0.0;
         }
 
+        //reset zoom
+        if (pressedKeys[80] && pressedKeys[16]){ //shift-=
+            zoomMat = mat3();
+        }
+
         //******reset all controls********
         //shift-r
         if (pressedKeys[82] && pressedKeys[16]){
@@ -545,6 +550,7 @@ function animation(gl){
             var_b = 0;
             var_d = 0; 
             var_e = 1;
+            zoomMat = mat3();
         }
 
 
