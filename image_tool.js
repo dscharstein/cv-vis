@@ -721,6 +721,7 @@ function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoomMat);
     gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoomMat);
 
+
     diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["out"], im1flag, im2flag, s_val, 0.5);
 }
 
@@ -1043,11 +1044,6 @@ function zoomim(gl, inTex, outTex, zoomMat){
 
     var u_Zoom = gl.getUniformLocation(gl.zoom_program, 'u_Zoom');
     gl.uniformMatrix3fv(u_Zoom, false, flatten(zoomMat));
-
-    /*
-    var u_Center = gl.getUniformLocation(gl.zoom_program, 'u_Center');
-    gl.uniform2f(u_Center, center[0], center[1]);*/
-
 
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
