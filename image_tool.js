@@ -539,6 +539,12 @@ function animation(gl){
         //reset zoom
         if (pressedKeys[80] && pressedKeys[16]){ //shift-=
             zoomMat = mat3();
+            zoom = 1.0;
+            zoomcumul = 1.0;
+            gl.old_mouse_x = 0.0;
+            gl.old_mouse_y = 0.0;
+            gl.old_tex_x = 0.0;
+            gl.old_tex_y = 0.0;
         }
 
         //******reset all controls********
@@ -551,6 +557,12 @@ function animation(gl){
             var_d = 0; 
             var_e = 1;
             zoomMat = mat3();
+            zoom = 1.0;
+            zoomcumul = 1.0;
+            gl.old_mouse_x = 0.0;
+            gl.old_mouse_y = 0.0;
+            gl.old_tex_x = 0.0;
+            gl.old_tex_y = 0.0;
         }
 
 
