@@ -741,15 +741,18 @@ function bleyer(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
 
-    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["crop1"], gl.textures["crop2"], gl.textures["im1_alter2"]); //****
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoomMat);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoomMat);
 
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["crop2"], gl.textures["im2_alter1"]);
+    gl.textures["im1_alter2"] = abs_diff(gl, gl.textures["scratch1"], gl.textures["scratch2"], gl.textures["im1_alter2"]); //****
+
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["scratch2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
     gl.textures["im2_alter1"] = magnitude(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], gl.textures["im2_alter1"]); 
 
 
-    gl.textures["im2_alter2"] = black_white(gl, gl.textures["crop1"], gl.textures["im2_alter2"]);
+    gl.textures["im2_alter2"] = black_white(gl, gl.textures["scratch1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter2"], gl.textures["im2_alter3"]); 
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter2"], gl.textures["im1_alter3"]); 
     gl.textures["im2_alter2"] = magnitude(gl, gl.textures["im2_alter3"], gl.textures["im1_alter3"], gl.textures["im2_alter2"]); 
@@ -764,14 +767,16 @@ function gradient(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoomMat);
 
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["crop2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["scratch2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]);
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]);
     
 
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
-    gl.textures["im1_alter1"] = black_white(gl, gl.textures["crop1"], gl.textures["im1_alter1"]);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoomMat);
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["scratch1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]);
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]);
     gl.textures["im1_alter1"] = diff(gl, gl.textures["im1_alter2"], gl.textures["im2_alter2"], gl.textures["im1_alter1"],im1flag, im2flag, s_val, 0.0);
@@ -786,13 +791,15 @@ function icpr(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]); 
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["crop2"], gl.textures["scratch2"], zoomMat);
 
-    gl.textures["im2_alter1"] = black_white(gl, gl.textures["crop2"], gl.textures["im2_alter1"]);
+    gl.textures["im2_alter1"] = black_white(gl, gl.textures["scratch2"], gl.textures["im2_alter1"]);
     gl.textures["im2_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter2"]); 
     gl.textures["im2_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im2_alter1"], gl.textures["im2_alter3"]); 
 
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
-    gl.textures["im1_alter1"] = black_white(gl, gl.textures["crop1"], gl.textures["im1_alter1"]);
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["crop1"], gl.textures["scratch1"], zoomMat);
+    gl.textures["im1_alter1"] = black_white(gl, gl.textures["scratch1"], gl.textures["im1_alter1"]);
     gl.textures["im1_alter2"] = sobel(gl, 1, 0, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter2"]); 
     gl.textures["im1_alter3"] = sobel(gl, 0, 1, 3, 1, gl.textures["im1_alter1"], gl.textures["im1_alter3"]); 
 
@@ -815,23 +822,26 @@ function ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
     var nccsize = 3;
 
-    gl.textures["scratch1"] = black_white(gl, gl.textures["crop2"], gl.textures["scratch1"]); 
-    gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]); //R
+    gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
+    gl.textures["scratch2"] = black_white(gl, gl.textures["crop2"], gl.textures["scratch2"]); 
+    gl.textures["scratch1"] = zoomim(gl, gl.textures["scratch2"], gl.textures["scratch1"], zoomMat); //R
+
 
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
-    gl.textures["im1_alter3"] = black_white(gl, gl.textures["crop1"], gl.textures["im1_alter3"]); //L
+    gl.textures["im1_alter3"] = black_white(gl, gl.textures["crop1"], gl.textures["im1_alter3"]); 
+    gl.textures["scratch2"] = zoomim(gl, gl.textures["im1_alter3"], gl.textures["scratch2"], zoomMat); //L
 
-    gl.textures["im1_alter1"] = boxfilter(gl, gl.textures["im1_alter3"], gl.textures["im1_alter1"], nccsize); //Lb
+    gl.textures["im1_alter1"] = boxfilter(gl, gl.textures["scratch2"], gl.textures["im1_alter1"], nccsize); //Lb
     gl.textures["im2_alter1"] = boxfilter(gl, gl.textures["scratch1"], gl.textures["im2_alter1"], nccsize); //Rb
 
-    gl.textures["im1_alter2"] = multiply(gl, gl.textures["im1_alter3"], gl.textures["im1_alter3"], gl.textures["im1_alter2"]); //LL
+    gl.textures["im1_alter2"] = multiply(gl, gl.textures["scratch2"], gl.textures["scratch2"], gl.textures["im1_alter2"]); //LL
     gl.textures["im2_alter2"] = multiply(gl, gl.textures["scratch1"], gl.textures["scratch1"], gl.textures["im2_alter2"]); //RR
-    gl.textures["scratch2"] = multiply(gl, gl.textures["im1_alter3"], gl.textures["scratch1"], gl.textures["scratch2"]); //RB
+    gl.textures["crop2"] = multiply(gl, gl.textures["scratch2"], gl.textures["scratch1"], gl.textures["crop2"]); //RB
 
     gl.textures["im1_alter3"] = boxfilter(gl, gl.textures["im1_alter2"], gl.textures["im1_alter3"], nccsize); //LLb
     gl.textures["im2_alter3"] = boxfilter(gl, gl.textures["im2_alter2"], gl.textures["im2_alter3"], nccsize); //RRb
-    gl.textures["scratch1"] = boxfilter(gl, gl.textures["scratch2"], gl.textures["scratch1"], nccsize); //LRb
+    gl.textures["scratch1"] = boxfilter(gl, gl.textures["crop2"], gl.textures["scratch1"], nccsize); //LRb
 
     gl.textures["im1_alter2"] = multiply(gl, gl.textures["im1_alter1"], gl.textures["im1_alter1"], gl.textures["im1_alter2"]); //Lb2
     gl.textures["im2_alter2"] = multiply(gl, gl.textures["im2_alter1"], gl.textures["im2_alter1"], gl.textures["im2_alter2"]); //Rb2
