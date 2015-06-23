@@ -751,7 +751,10 @@ function display(gl, im1flag, im2flag, transMat, s_val, zoomMat){
 
 function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     
+
+
     gl.textures["im2_2"] = transform(gl, transMat, gl.textures["orig_image2"], gl.textures["im2_2"]);
+
     gl.textures["crop2"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["im2_2"], gl.textures["crop2"]);
     gl.textures["crop1"] = sample(gl, gl.origin, [gl.sample_width, gl.sample_height], gl.textures["orig_image1"], gl.textures["crop1"]);
 
@@ -1490,7 +1493,7 @@ function create_texture(gl, image, textureid, width, height){
     gl.activeTexture(gl.TEXTURE0 + textureid);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     if(image !== null){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.FLOAT, image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.FLOAT, image);
         texture.width = image.width;
         texture.height = image.height;
     }else{

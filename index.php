@@ -966,8 +966,8 @@
 
                     $path = "./images/";
 
-                    $select1 = "<select name=\"content\" id=\"image1_menu\">";
-                    $select2 = "<select name=\"content\" id=\"image2_menu\">";
+                    $select1 = "\n<select name=\"content\" id=\"image1_menu\">\n";
+                    $select2 = "\n<select name=\"content\" id=\"image2_menu\">\n";
 
                     // match all files that have either .png or .jpg extension
                     $file_matcher = realpath(dirname(__FILE__)) . "/" . $path . '*.{png,jpg}';
@@ -982,10 +982,9 @@
                         }
                     }
 
-                    $select1 .= "</select>";
-                    $select2 .= "</select>";
+                    $select1 .= "</select> \n";
+                    $select2 .= "</select> \n";
                     echo $select1;
-                    echo "<br />";
                     echo $select2;
 
                 ?>
