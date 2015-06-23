@@ -6,12 +6,13 @@
  *	2015-06-02
  */
 
-var im_dir_path = "images/";
+var im_dir_path = "./images/";
 var mode;
 var modes = ["inten_diff", "gradient", "bleyer", "icpr", "ncc", "blink"];
 var debug_buffer = 0;
 var scroll_scale = 1000.0;
-
+var default_image1 = im_dir_path + "cones1.png";
+var default_image2 = im_dir_path + "cones2.png";
 
 /*
  * function that is called when the window is loaded
@@ -23,16 +24,20 @@ window.onload = function main(){
     // initialize the gl object 
     gl = initialize_gl();
 
-    image_pair = 'cones';
-    var im_menu = document.getElementById('image_menu');
-    im_menu.value = image_pair;
+
+    var im1_menu = document.getElementById('image1_menu');
+    im1_menu.value = default_image1;
+    var im2_menu = document.getElementById('image2_menu');
+    im2_menu.value = default_image2;
     
-    load_images(gl, image_pair);
+    load_images(gl, default_image1, default_image2);
     
 }
 
 
-function load_images(gl, image_pair){
+function load_images(gl, image1, image2){
+    
+    /*
     var image1 = im_dir_path;
     var image2 = im_dir_path;
 
@@ -53,6 +58,7 @@ function load_images(gl, image_pair){
             image1 += 'cones1.png';
             image2 += 'cones2.png';
     }
+    */
 
 
 
@@ -160,6 +166,14 @@ function initialize_gl() {
  * 
  */
 function animation(gl){
+    /*
+    if( gl.images["image0"].width != gl.images["image1"].width || 
+        gl.images["image0"].height != gl.images["image1"].height ){
+
+        alert(  "Image Dimensions do not match, using defaults: ", 
+                default_image1, " & ", default_image2);
+        load_images(gl, default_image1, default_image2);
+    }*/
 
     var win_width = document.getElementById('window-width');
     var win_height = document.getElementById('window-height');
@@ -287,10 +301,15 @@ function animation(gl){
         program_select();
     }
 
-    var im_menu = document.getElementById('image_menu');
+    var im1_menu = document.getElementById('image1_menu');
+    var im2_menu = document.getElementById('image2_menu');
 
-    im_menu.onchange = function(){
-        load_images(gl, im_menu.value);
+    im1_menu.onchange = function(){
+        load_images(gl, im1_menu.value, im2_menu.value);
+    }
+
+    im2_menu.onchange = function(){
+        load_images(gl, im1_menu.value, im2_menu.value);
     }
 
     
