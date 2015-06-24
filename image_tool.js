@@ -375,7 +375,6 @@ function animation(gl){
         //if the user is doing an option-click, 
         //set the anchor point to be the point under the mouse:
         if (pressedKeys[18]) {
-            console.log("works!");
             anchorx = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
             anchory = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
         }
@@ -1015,7 +1014,6 @@ function initialize_shader(gl, program, inWidth, inHeight, outWidth, outHeight){
     //create_image_plane(gl.sample_width, gl.sample_height);
 
     if(typeof gl.texCoordBuffer == 'undefined'){
-        console.log("creating texcoordbuffer");
         create_texture_coords("a_TexCoord", gl, program);
     }
 
@@ -1528,7 +1526,6 @@ function create_texture(gl, image, textureid, width, height){
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.FLOAT, null);
         texture.width = width;
         texture.height = height;
-        console.log("creating empty texture");
     }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
