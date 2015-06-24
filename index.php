@@ -192,7 +192,7 @@
             vec4 im1Color = vec4(0.0,0.0,0.0,1.0);
 
             void main(){
-                mat3 u_TransMat = u_zoomMat * u_translationMat * u_revMat * u_affineMat * u_shiftMat;
+                mat3 u_TransMat = u_zoomMat * u_revMat * u_affineMat * u_shiftMat * u_translationMat;
                 uv = (u_TransMat*vec3(v_TexCoord, 1.0)).xy;
                 if(uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0){
                         im1Color = texture2D(u_Image1, uv);
