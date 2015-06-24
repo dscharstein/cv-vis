@@ -175,10 +175,18 @@ function animation(gl){
         load_images(gl, default_image1, default_image2);
     }*/
 
+
+    //animation "globals":
     var win_width = document.getElementById('window-width');
     var win_height = document.getElementById('window-height');
     win_width.value = gl.sample_width;
     win_height.value = gl.sample_height;
+
+    //create "dictionary" of keys and store whether they are pressed or not
+    var pressedKeys = {};
+
+    var anchorx = 0.5;
+    var anchory = 0.5;
 
     gl.scrolling = 0;
     gl.mouse_x = 0.0;
@@ -191,12 +199,13 @@ function animation(gl){
     var zoom = 1.0;
     var zoomcumul = 1.0;
 
-     var zoomMat = mat3(
+    var zoomMat = mat3(
         1, 0, 0,
         0, 1, 0,
         0, 0, 1
         );
 
+    //event handlers:
     gl.canvas.onwheel = function(event){
         gl.scrolling = 1;
         event.preventDefault();
@@ -363,6 +372,14 @@ function animation(gl){
         old_mouse_x = event.clientX;    // get the mouse x and y
         old_mouse_y = event.clientY;
 
+        //if the user is doing an option-click, 
+        //set the anchor point to be the point under the mouse:
+        if (pressedKeys[18]) {
+            console.log("works!");
+            anchorx = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
+            anchory = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
+        }
+
     }
 
     function mouse_up_handler(event){
@@ -439,8 +456,6 @@ function animation(gl){
 
     speed_text.innerHTML = moveDist;
 
-    //create "dictionary" of keys and store whether they are pressed or not
-    var pressedKeys = {};
 
     document.onkeydown = function(event) {
         
@@ -681,15 +696,15 @@ function animation(gl){
 
         //for shifting the image so desired point is center of shear
         var shiftMat = mat3(
-        1, 0, -0.5,
-        0, 1, -0.5,
+        1, 0, -anchorx,
+        0, 1, -anchory,
         0, 0, 1
         );
 
         //for shifting the image back to its original location
         var revMat = mat3(
-        1, 0, 0.5,
-        0, 1, 0.5,
+        1, 0, anchorx,
+        0, 1, anchory,
         0, 0, 1
         );
 
