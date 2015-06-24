@@ -999,6 +999,7 @@
                     <p><strong>r:</strong> reset image position</p> 
                     <p><strong>b:</strong> blink between images</p> 
                     <p><strong>shift-g:</strong> reset x disparity gradient value</p>
+                    <p><strong>alt-click:</strong> set warp anchor point</p>
                 </div>
             </div>
             <div class="column-box">
