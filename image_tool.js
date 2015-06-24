@@ -905,6 +905,13 @@ function ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat){
  */
 function initialize(){
 
+    for (var key in gl.textures) {
+        if (gl.textures.hasOwnProperty(key)){
+            console.log(key + " -> " + gl.textures[key]);
+            gl.deleteTexture(gl.textures[key]);
+        }
+    }
+
     var image1 = gl.images["image0"];
     var image2 = gl.images["image1"];
 
@@ -938,6 +945,7 @@ function initialize(){
     gl.textures["crop2"] = create_texture(gl, null, 12, gl.sample_width, gl.sample_height);
 
     gl.textures["out"] = create_texture(gl, null, 13, gl.sample_width, gl.sample_height);
+
 }
 
 /*
