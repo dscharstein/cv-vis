@@ -305,10 +305,14 @@ function animation(gl){
     var im2_menu = document.getElementById('image2_menu');
 
     im1_menu.onchange = function(){
+        // reinitialize gl and throw away old gl (garbage collected)
+        gl = initialize_gl();
         load_images(gl, im1_menu.value, im2_menu.value);
     }
 
     im2_menu.onchange = function(){
+        // reinitialize gl and throw away old gl (garbage collected)
+        gl = initialize_gl();
         load_images(gl, im1_menu.value, im2_menu.value);
     }
 
@@ -904,13 +908,14 @@ function ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat){
  * the images will be rendered
  */
 function initialize(){
-
+    /*
     for (var key in gl.textures) {
         if (gl.textures.hasOwnProperty(key)){
             console.log(key + " -> " + gl.textures[key]);
             gl.deleteTexture(gl.textures[key]);
         }
     }
+    */
 
     var image1 = gl.images["image0"];
     var image2 = gl.images["image1"];
