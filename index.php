@@ -894,6 +894,43 @@
 
                 gl_FragColor = vec4(sum, 1.0);  
             }
+        </script>
+
+
+        <script id="anchor-vertex-shader" type="x-shader/x-vertex">
+        //***********************************ANCHOR SHADERS:*****************************************************************
+            attribute vec3 a_Position;
+            attribute vec3 a_Color;
+            varying vec3 v_Color;
+            uniform mat3 u_Transform;
+            uniform mat3 u_ZoomMat;
+
+            
+            void main(){
+
+                //convert position data from pixels to range 0.0 - 1.0 (normalize)
+                // convert 0.0 - 1.0 to 0.0 - 2.0;
+                vec3 doubled_pos = a_Position * 2.0;
+                // convert to clip coords -1.0 - 1.0
+                vec3 clipCoords = doubled_pos - 1.0;
+
+                gl_Position = vec4((u_ZoomMat * u_Transform * vec3((clipCoords.xy), 1.0)).xy, 1.0, 1.0);
+                gl_PointSize = 10.0;
+                v_Color = a_Color;
+
+            }
+        </script>
+
+
+        
+        <script id="anchor-fragment-shader" type="x-shader/x-fragment">
+            precision highp float;
+            varying vec3 v_Color;
+             
+            void main(){
+                gl_FragColor = vec4(v_Color, 1.0);
+            } 
+        </script>
             
         </script>
 

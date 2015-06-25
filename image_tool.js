@@ -124,6 +124,7 @@ function initialize_gl() {
     gl.add_program = initShaders(gl, "add-vertex-shader", "add-fragment-shader");
     gl.sampler_program = initShaders(gl, "sampler-vertex-shader", "sampler-fragment-shader");
     gl.zoom_program = initShaders(gl, "zoom-vertex-shader", "zoom-fragment-shader");
+    gl.anchor_program = initShaders(gl, "anchor-vertex-shader", "anchor-fragment-shader");
 
     // dictionary to hold image objects once they have been loaded
     // images are stored with an id, e.g. the first image is stored with
@@ -136,7 +137,8 @@ function initialize_gl() {
     gl.sample_height = 400;
     gl.origin = [0.0,0.0];
     
-
+    gl.anchorBuffer;
+    gl.anchorVertices;
 
     gl.positionBuffers = {};
 
@@ -182,11 +184,17 @@ function animation(gl){
     win_width.value = gl.sample_width;
     win_height.value = gl.sample_height;
 
+    var im1_menu = document.getElementById('image1_menu');
+    var im2_menu = document.getElementById('image2_menu');
+
     //create "dictionary" of keys and store whether they are pressed or not
     var pressedKeys = {};
 
     var anchorx = 0.5;
     var anchory = 0.5;
+
+    gl.browser_x = 0.0;
+    gl.browser_y = 0.0;
 
     gl.scrolling = 0;
     gl.mouse_x = 0.0;
@@ -195,6 +203,7 @@ function animation(gl){
     gl.old_mouse_y = 0.0;
     gl.old_tex_x = 0.0;
     gl.old_tex_y = 0.0;
+    var gl_mouse_coords = [0.0, 0.0];
 
     var zoom = 1.0;
     var zoomcumul = 1.0;
@@ -204,6 +213,19 @@ function animation(gl){
         0, 1, 0,
         0, 0, 1
         );
+
+    var anchorZoomMat = mat3(
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+        );
+
+
+
+
+
+
+
 
     //event handlers:
     gl.canvas.onwheel = function(event){
@@ -215,6 +237,10 @@ function animation(gl){
 
         gl.old_mouse_x = gl.mouse_x;
         gl.old_mouse_y = gl.mouse_y;
+
+        gl_mouse_coords = browser_to_gl(gl, gl.browser_x, gl.browser_y, event.target.getBoundingClientRect());
+
+        console.log(gl_mouse_coords);
 
         if(event.deltaY/scroll_scale < 0){
             zoomcumul = Math.abs(event.deltaY/scroll_scale) + 1.0;
@@ -246,18 +272,44 @@ function animation(gl){
         0, 0, 1
         );
 
+        //shift matrices to shift the zoomcenter in gl coordinates to the 
+        //center, for correctly positioning the anchor display point
+        var anchUnshift = mat3(
+        1, 0, gl_mouse_coords[0],
+        0, 1, gl_mouse_coords[1],
+        0, 0, 1
+        );
+
+        var anchZoomStep = mat3(
+        1.0/zoomcumul, 0.0, 0.0,
+        0.0, 1.0/zoomcumul, 0.0,
+        0.0, 0.0, 1.0
+        );
+
+        var anchShift = mat3(
+        1, 0, -gl_mouse_coords[0],
+        0, 1, -gl_mouse_coords[1],
+        0, 0, 1
+        );
+
         //add these three matrices to the cumulative shift matrix
-        zoomMat = mult(unshift, mult(zoomStep, mult(shift, zoomMat)));      
+        zoomMat = mult(unshift, mult(zoomStep, mult(shift, zoomMat))); 
+        anchorZoomMat =  mult(anchUnshift, mult(anchZoomStep, mult(anchShift, anchorZoomMat)));
     }
 
     win_width.onchange = function(){
+        gl = initialize_gl();
         gl.sample_width = win_width.value;
-        animation(gl);
+        gl.sample_height = win_height.value;
+        console.log(im1_menu.value);
+        load_images(gl, im1_menu.value, im2_menu.value);
     }
 
     win_height.onchange = function(){
+        gl = initialize_gl();
         gl.sample_height = win_height.value;
-        animation(gl);
+        gl.sample_width = win_width.value;
+        load_images(gl, im1_menu.value, im2_menu.value);
     }
 
 
@@ -310,8 +362,7 @@ function animation(gl){
         program_select();
     }
 
-    var im1_menu = document.getElementById('image1_menu');
-    var im2_menu = document.getElementById('image2_menu');
+   
 
     im1_menu.onchange = function(){
         // reinitialize gl and throw away old gl (garbage collected)
@@ -357,6 +408,8 @@ function animation(gl){
     var old_mouse_y = 0.0;
     var dx = 0.0;
     var dy = 0.0;
+    var anchor_dx = 0.0;
+    var anchor_dy = 0.0;
 
     //variables for user to control affine transformations
     var var_a = 1;
@@ -375,8 +428,9 @@ function animation(gl){
         //if the user is doing an option-click, 
         //set the anchor point to be the point under the mouse:
         if (pressedKeys[18]) {
-            anchorx = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
-            anchory = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
+            anchorx = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom) + (-dx / gl.sample_width);
+            anchory = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom) + (dy / gl.sample_height);
+            gl.anchorVertices = [anchorx, anchory, 1.0, 1.0, 0.0, 0.0];
         }
 
     }
@@ -392,6 +446,9 @@ function animation(gl){
             // the variables storing the mouse's location
             mouse_x = event.clientX;
             mouse_y = event.clientY;
+
+            gl.browser_x = mouse_x;
+            gl.browser_y = mouse_y;
 
             var rect = event.target.getBoundingClientRect();
 
@@ -409,6 +466,7 @@ function animation(gl){
 
             return;
         }
+
         mode = old_state.mode;
         im1flag = old_state.im1flag;
         im2flag = old_state.im2flag;
@@ -420,7 +478,17 @@ function animation(gl){
         var new_mouse_x = event.clientX;
         var new_mouse_y = event.clientY;
       
-        
+
+        //compute shift of anchor point, uses gl coordinates:
+        var rect = event.target.getBoundingClientRect();
+
+        var gl_old = browser_to_gl(gl, old_mouse_x, old_mouse_y, rect);
+        var gl_new = browser_to_gl(gl, new_mouse_x, new_mouse_y, rect);
+
+        anchor_dx += gl_new[0] - gl_old[0];
+        anchor_dy += gl_new[1] - gl_old[1];
+
+
         // calculate the difference between the last mouse position
         // and the new and use it as the amount to rotate the mesh
         // the rotation is broken down into its x and y components
@@ -437,6 +505,7 @@ function animation(gl){
         old_mouse_y = new_mouse_y;
     }
     /********************************************/
+
 
 
     /********************************************/
@@ -494,16 +563,20 @@ function animation(gl){
         //horizontal motion key control:
         if (pressedKeys[65] || pressedKeys[37]) { //if A key or left arrow is pressed, shift in neg x direction
             dx -= moveDist;
+            anchor_dx -= 2.0 * (moveDist/gl.sample_width);
         } else if (pressedKeys[68] || pressedKeys[39]) { //if D key or right arrow is pressed, shift in pos x direction
             dx += moveDist;
+            anchor_dx += 2.0 * (moveDist/gl.sample_width);
         } 
     
         //vertical motion key control
         if (!pressedKeys[16]) { //only move vertically if shift key is not pressed
             if (pressedKeys[87] || pressedKeys[38]) { //if W key or up arrow is pressed, shift in pos y direction
                 dy -= moveDist;
+                anchor_dy += 2.0 * (moveDist/gl.sample_height);
             } else if (pressedKeys[83] || pressedKeys[40]) { //if S key or down arrow is pressed, shift in neg y direction
                 dy += moveDist;
+                anchor_dy -= 2.0 * (moveDist/gl.sample_height);
             } 
         }
 
@@ -686,6 +759,12 @@ function animation(gl){
         0, 0, 1
         );
 
+        var anchorTranslationMat = mat3(
+        1, 0, anchor_dx,
+        0, 1, anchor_dy,
+        0, 0, 1
+        );
+
         //for affine transformations
         var affineMat = mat3(
         var_a, var_b, 0,
@@ -720,7 +799,8 @@ function animation(gl){
             translationMat,
             revMat,
             affineMat,
-            shiftMat
+            shiftMat,
+            anchorTranslationMat
         ];
 
         // convert the boolean to an int to send to the shader
@@ -750,7 +830,8 @@ function animation(gl){
                 break;
         } 
 
-        display(gl, im1flag, im2flag, transMat, s_val);
+
+        display(gl, im1flag, im2flag, transMat, s_val, anchorZoomMat);
         //render_image(gl);
         gl.scrolling = 0;
         requestAnimationFrame(tick);
@@ -760,11 +841,41 @@ function animation(gl){
 
 }
 
-function display(gl, im1flag, im2flag, transMat, s_val, zoomMat){
+
+//convert (x,y) pair from browser coordinates to gl coordinates
+function browser_to_gl(gl, x, y, bound_rect){
+    var height = gl.canvas.height;
+    var width = gl.canvas.width;
+    var gl_x = (((x - bound_rect.left) - width/2.0) / (width/2.0));
+    var gl_y = ((height/2.0 - (y - bound_rect.top)) / (height/2.0));
+    return [gl_x, gl_y];
+}
+
+function render_anchors(gl, transMat, zoomMat){
+    gl.useProgram(gl.anchor_program);
+
+    var u_Translation = gl.getUniformLocation(gl.anchor_program, 'u_Transform');
+    gl.uniformMatrix3fv(u_Translation, false, flatten(transMat[5]));
+
+    var u_ZoomMat = gl.getUniformLocation(gl.anchor_program, 'u_ZoomMat');
+    gl.uniformMatrix3fv(u_ZoomMat, false, flatten(zoomMat));
+
+    var flattenedAnchorArr = new Float32Array(gl.anchorVertices);
+    var FSIZE = flattenedAnchorArr.BYTES_PER_ELEMENT;
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.anchorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flattenedAnchorArr, gl.STATIC_DRAW);
+    enableAttribute(gl, gl.anchor_program, gl.anchorBuffer, "a_Position", 3, 6*FSIZE, 0);
+    enableAttribute(gl, gl.anchor_program, gl.anchorBuffer, "a_Color", 3, 3*FSIZE, 3*FSIZE);
+    gl.drawArrays(gl.POINTS, 0, gl.anchorVertices.length/6);
+}
+
+function display(gl, im1flag, im2flag, transMat, s_val, anchorZoomMat){
     switch_shader(gl, gl.display_program, gl.sample_width, gl.sample_height, gl.sample_width, gl.sample_height);
     var u_Image1 = gl.getUniformLocation(gl.display_program, 'u_Image1');
     gl.uniform1i(u_Image1, gl.textures["out"].textureid);
     render_image(gl);
+
+    render_anchors(gl, transMat, anchorZoomMat);
 }
 
 function inten_diff(gl, im1flag, im2flag, transMat, s_val, zoomMat){
@@ -916,6 +1027,26 @@ function ncc(gl, im1flag, im2flag, transMat, s_val, zoomMat){
     divide(gl, gl.textures["im1_alter2"], gl.textures["scratch1"], gl.textures["out"]); 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
  * creates image textures, sets the canvas to the 
  * appropriate size, and creates the quad on which
@@ -965,6 +1096,13 @@ function initialize(){
 
     gl.textures["out"] = create_texture(gl, null, 13, gl.sample_width, gl.sample_height);
 
+    gl.anchorVertices = [ 0.5, 0.5, 1.0, 1.0, 0.0, 0.0];
+    var flattenedAnchorArr = new Float32Array(gl.anchorVertices);
+    var FSIZE = flattenedAnchorArr.BYTES_PER_ELEMENT;
+
+    gl.anchorBuffer = createBuffer(gl, gl.ARRAY_BUFFER, flatten(gl.anchorVertices), "anchorBuffer", gl.STATIC_DRAW);
+    enableAttribute(gl, gl.anchor_program, gl.anchorBuffer, "a_Position", 3, 6*FSIZE, 0);
+    enableAttribute(gl, gl.anchor_program, gl.anchorBuffer, "a_Color", 3, 3*FSIZE, 3*FSIZE);
 }
 
 /*
@@ -1040,9 +1178,18 @@ function switch_shader(gl, program, inWidth, inHeight, outWidth, outHeight){
  */
 function render_image(gl){
     gl.clear(gl.COLOR_BUFFER_BIT);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.positionBuffer);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
+
+
+
+
+
+
+
+//*********************************************** SHADER FUNCTIONS ***********************************************
 
 function sample(gl, origin, outRes, inTex, outTex){
     switch_shader(gl, gl.sampler_program, inTex.width, inTex.height, outTex.width, outTex.height);
@@ -1052,8 +1199,6 @@ function sample(gl, origin, outRes, inTex, outTex){
     var u_Origin = gl.getUniformLocation(gl.sampler_program, 'u_Origin');
     gl.uniform2f(u_Origin, origin[0], origin[1]);
 
-    /*var u_Zoom = gl.getUniformLocation(gl.sampler_program, 'u_Zoom');
-    gl.uniform1f(u_Zoom, zoom);*/
 
     var u_ImInRes = gl.getUniformLocation(gl.sampler_program, 'u_ImInRes');
     gl.uniform2f(u_ImInRes, inTex.width, inTex.height);
