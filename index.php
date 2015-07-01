@@ -9,7 +9,7 @@
         
         <link rel="stylesheet" type="text/css" href="assets/style/main-style.css" />
 
-        <script type="text/javascript" src="image_tool.js"></script>
+        <script type="text/javascript" src="hidden/imdiff.js"></script>
 
 
         <script id="display-vertex-shader" type="x-shader/x-vertex">
@@ -320,28 +320,9 @@
             void main(){
                 
                 //gl_FragColor = texture2D(u_Image1, v_TexCoord);
-
-                if(u_ImFlag1 == 1){
-                    im1Color = texture2D(u_Image1, v_TexCoord);
-                    if(u_ImFlag2 == 0){
-                        gl_FragColor = im1Color;
-                    }
-                }
-
-                if(u_ImFlag2 == 1){
-                    im2Color = texture2D(u_Image2, v_TexCoord);
-                    if(u_ImFlag1 == 0){
-                        gl_FragColor = im2Color;
-                    }
-                }
-
-                if(u_ImFlag1 == 1 && u_ImFlag2 == 1){
-                    gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb )* u_S) + u_Gamma, 1.0);
-                }
-
-                if(u_ImFlag1 == 0 && u_ImFlag2 == 0){
-                    gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-                }
+                im1Color = texture2D(u_Image1, v_TexCoord);
+                im2Color = texture2D(u_Image2, v_TexCoord);
+                gl_FragColor = vec4((((im2Color).rgb - (im1Color).rgb )* u_S) + u_Gamma, 1.0);
             }
         </script>
 

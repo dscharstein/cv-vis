@@ -24,7 +24,6 @@ window.onload = function main(){
     // initialize the gl object 
     gl = initialize_gl();
 
-
     var im1_menu = document.getElementById('image1_menu');
     im1_menu.value = default_image1;
     var im2_menu = document.getElementById('image2_menu');
@@ -62,7 +61,7 @@ function load_images(gl, image1, image2){
 
 
 
-     // load the first image asynchronously using a promise
+    // load the first image asynchronously using a promise
     // the image loaded from this is stored with image id 0
     // on success this will try to load image 2
     Promise.all([ read_image(gl, 0, image1)])
@@ -234,6 +233,8 @@ function animation(gl){
 
         gl.old_tex_x = (gl.old_tex_x + (gl.mouse_x - gl.old_mouse_x) * zoom);
         gl.old_tex_y = (gl.old_tex_y + (gl.mouse_y - gl.old_mouse_y) * zoom);
+
+        console.log(gl.old_tex_x);
 
         gl.old_mouse_x = gl.mouse_x;
         gl.old_mouse_y = gl.mouse_y;
@@ -1096,6 +1097,7 @@ function initialize(){
 
     gl.textures["out"] = create_texture(gl, null, 13, gl.sample_width, gl.sample_height);
 
+
     gl.anchorVertices = [ 0.5, 0.5, 1.0, 1.0, 0.0, 0.0];
     var flattenedAnchorArr = new Float32Array(gl.anchorVertices);
     var FSIZE = flattenedAnchorArr.BYTES_PER_ELEMENT;
@@ -1735,23 +1737,15 @@ function initializeTexture(gl, textureid, filename) {
 }
 
 function read_image(gl, image_id, filename) {
-    
     return new Promise(function(resolve, reject){
         var image = new Image();
-        
-    
         image.onload = function(){
-
-            //image.name = filename;
-            gl.images["image"+image_id] = image;
-                        
+            gl.images["image"+image_id] = image;            
             resolve();
         }
-        
         image.onerror = function(error){
             reject(Error(filename));
         }
-    
         image.src = filename; 
     });
 }
