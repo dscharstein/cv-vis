@@ -203,6 +203,8 @@ function ImdiffApp(){
 	//as top image is transformed
 	this.anchor_dx = 0.0;
 	this.anchor_dy = 0.0;
+	this.image_anchor_x = 0.0;
+	this.image_anchor_y = 0.0;
 
 	//keeping track of current and previous mouse coordinates
 	//used for zooming & shifting 
@@ -399,6 +401,8 @@ ImdiffApp.prototype = {
 	resize_canvas: function(){
 		this.canvas.width = this.window_width;
 		this.canvas.height = this.window_height;
+		this.window_origin = [	-(((this.window_width-this.image1.width)/2.0)/this.image1.width),
+								-(((this.window_height-this.image1.height)/2.0)/this.image1.height)];
 		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 	},
 
@@ -429,19 +433,21 @@ ImdiffApp.prototype = {
         	var canvas_clicked_xy = browser_to_canvas(	this.window_width, this.window_height, 
         												this.browser_clicked_x, this.browser_clicked_y,
         												event.target.getBoundingClientRect());
-        	
-        	var canvas_zoomed_xy = browser_to_canvas(	this.window_width, this.window_height, 
-        												this.browser_zoomed_x, this.browser_zoomed_y,
-        												event.target.getBoundingClientRect());
 
             this.anchor_x = (this.texture_zoompoint_x + 
-            				(canvas_clicked_xy[0] - canvas_zoomed_xy[0]) * this.zoom) + 
+            				(canvas_clicked_xy[0] - this.canvas_zoomed_x) * this.zoom) + 
             				(-this.dx / this.window_width);
 
             this.anchor_y = (this.texture_zoompoint_y + 
-            				(canvas_clicked_xy[1] - canvas_zoomed_xy[1]) * this.zoom) + 
+            				(canvas_clicked_xy[1] - this.canvas_zoomed_y) * this.zoom) + 
 							(this.dy / this.window_height);
 
+			var scale_x = this.window_width / this.image1.width;
+			var scale_y = this.window_height / this.image1.height;
+			this.image_anchor_x = (this.anchor_x * scale_x) + this.window_origin[0];
+			this.image_anchor_y = (this.anchor_y * scale_y) + this.window_origin[1];
+
+			
             this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 1.0, 0.0, 0.0];
         }
 
@@ -522,54 +528,55 @@ ImdiffApp.prototype = {
             this.zoominc = event.deltaY/this.zoom_scale + 1.0; 
         }
 
-        
+        if (this.zoom * this.zoominc > 0.0001 && this.zoom * this.zoominc < 1.0) {
         //set zoom to match the current zoom level by multiplying the previous zoom level
         //by 'zoominc'
-       this.zoom *= this.zoominc;
+      		this.zoom *= this.zoominc;
 
-       //compute new matrices to shift the zoomcenter to the origin,
-       //zoom in on the origin, then shift back with point at previous location
-        var unshift = mat3(
-        1, 0, this.texture_zoompoint_x,
-        0, 1, this.texture_zoompoint_y,
-        0, 0, 1
-        );
+	       //compute new matrices to shift the zoomcenter to the origin,
+	       //zoom in on the origin, then shift back with point at previous location
+	        var unshift = mat3(
+	        1, 0, this.texture_zoompoint_x,
+	        0, 1, this.texture_zoompoint_y,
+	        0, 0, 1
+	        );
 
-        var zoomStep = mat3(
-        this.zoominc, 0.0, 0.0,
-        0.0, this.zoominc, 0.0,
-        0.0, 0.0, 1.0
-        );
+	        var zoomStep = mat3(
+	        this.zoominc, 0.0, 0.0,
+	        0.0, this.zoominc, 0.0,
+	        0.0, 0.0, 1.0
+	        );
 
-        var shift = mat3(
-        1, 0, -this.texture_zoompoint_x,
-        0, 1, -this.texture_zoompoint_y,
-        0, 0, 1
-        );
+	        var shift = mat3(
+	        1, 0, -this.texture_zoompoint_x,
+	        0, 1, -this.texture_zoompoint_y,
+	        0, 0, 1
+	        );
 
-        //shift matrices to shift the zoomcenter in gl coordinates to the 
-        //center, for correctly positioning the anchor display point
-        var anchUnshift = mat3(
-        1, 0, gl_mouse_coords[0],
-        0, 1, gl_mouse_coords[1],
-        0, 0, 1
-        );
+	        //shift matrices to shift the zoomcenter in gl coordinates to the 
+	        //center, for correctly positioning the anchor display point
+	        var anchUnshift = mat3(
+	        1, 0, gl_mouse_coords[0],
+	        0, 1, gl_mouse_coords[1],
+	        0, 0, 1
+	        );
 
-        var anchZoomStep = mat3(
-        1.0/this.zoominc, 0.0, 0.0,
-        0.0, 1.0/this.zoominc, 0.0,
-        0.0, 0.0, 1.0
-        );
+	        var anchZoomStep = mat3(
+	        1.0/this.zoominc, 0.0, 0.0,
+	        0.0, 1.0/this.zoominc, 0.0,
+	        0.0, 0.0, 1.0
+	        );
 
-        var anchShift = mat3(
-        1, 0, -gl_mouse_coords[0],
-        0, 1, -gl_mouse_coords[1],
-        0, 0, 1
-        );
+	        var anchShift = mat3(
+	        1, 0, -gl_mouse_coords[0],
+	        0, 1, -gl_mouse_coords[1],
+	        0, 0, 1
+	        );
 
-        //add these three matrices to the cumulative shift matrix
-        this.zoomMat = mult(unshift, mult(zoomStep, mult(shift, this.zoomMat))); 
-        this.anchorZoomMat =  mult(anchUnshift, mult(anchZoomStep, mult(anchShift, this.anchorZoomMat)));
+	        //add these three matrices to the cumulative shift matrix
+	        this.zoomMat = mult(unshift, mult(zoomStep, mult(shift, this.zoomMat))); 
+	        this.anchorZoomMat =  mult(anchUnshift, mult(anchZoomStep, mult(anchShift, this.anchorZoomMat)));
+    	}
 	},
 
 	window_width_change: function(){
@@ -578,7 +585,7 @@ ImdiffApp.prototype = {
 		this.init_gl();	
 	},
 	window_height_change: function(){
-		this.window_height = this.window_width_input.value;
+		this.window_height = this.window_height_input.value;
 		this.resize_canvas();
 		this.init_gl();
 	},
@@ -691,15 +698,34 @@ ImdiffApp.prototype = {
 
         if(this.pressedKeys[73]){ // i
             this.window_origin = [this.window_origin[0], this.window_origin[1] + nav_speed];
+            this.anchorVertices[1] -= (nav_speed*(this.image2.height / this.window_height));
+
+            /*this.anchor_y -= nav_speed;
+            this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 1.0, 0.0, 0.0];*/
         }
         if(this.pressedKeys[74]){ // j
             this.window_origin = [this.window_origin[0] - nav_speed, this.window_origin[1]];
+            this.anchorVertices[0] += (nav_speed*(this.image2.width / this.window_width));
+
+            /*
+            this.anchor_x += nav_speed;
+            this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 1.0, 0.0, 0.0];*/
         }
         if(this.pressedKeys[75]){ // k
             this.window_origin = [this.window_origin[0], this.window_origin[1] - nav_speed];
+            this.anchorVertices[1] += (nav_speed*(this.image2.height / this.window_height));
+
+            /*
+            this.anchor_y += nav_speed;
+            this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 1.0, 0.0, 0.0];*/
         }
         if(this.pressedKeys[76]){ // l
             this.window_origin = [this.window_origin[0] + nav_speed, this.window_origin[1]];
+            this.anchorVertices[0] -= (nav_speed*(this.image2.width / this.window_width));
+
+            /*
+            this.anchor_x -= nav_speed;
+            this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 1.0, 0.0, 0.0];*/
         }
 
 
@@ -710,6 +736,8 @@ ImdiffApp.prototype = {
         if (this.pressedKeys[82]) { //if R is pressed, reset position of top image
             this.dx = 0;
             this.dy = 0;
+            this.anchor_dx = 0.0;
+            this.anchor_dy = 0.0;
         } 
         
         //reset dy:
@@ -734,8 +762,8 @@ ImdiffApp.prototype = {
             this.zoominc = 1.0;
             this.texture_zoompoint_x = 0.0;
             this.texture_zoompoint_y = 0.0;
-            this.browser_zoomed_x = 0.0;
-            this.browser_zoomed_y = 0.0;
+            this.canvas_zoomed_x = 0.0;
+            this.canvas_zoomed_y = 0.0;
         }
 
         //******reset all controls********
@@ -748,12 +776,16 @@ ImdiffApp.prototype = {
             this.var_d = 0; 
             this.var_e = 1;
             this.zoomMat = mat3();
+            this.anchorZoomMat = mat3();
             this.zoom = 1.0;
             this.zoominc = 1.0;
             this.texture_zoompoint_x = 0.0;
             this.texture_zoompoint_y = 0.0;
-            this.browser_zoomed_x = 0.0;
-            this.browser_zoomed_y = 0.0;
+            this.canvas_zoomed_x = 0.0;
+            this.canvas_zoomed_y = 0.0;
+            this.anchor_x = 0.5;
+            this.anchor_y = 0.5;
+            this.anchorVertices = [this.anchor_x, this.anchor_y, 1.0, 0.0, 0.0, 0.0];
         }
 
         //set to blink mode and displays image 2
@@ -790,6 +822,9 @@ ImdiffApp.prototype = {
         0, 0, 1
         );
 
+        
+
+
         var anchorTranslationMat = mat3(
         1, 0, this.anchor_dx,
         0, 1, this.anchor_dy,
@@ -805,15 +840,15 @@ ImdiffApp.prototype = {
 
         //for shifting the image so desired point is center of shear
         var shiftMat = mat3(
-        1, 0, -this.anchor_x,
-        0, 1, -this.anchor_y,
+        1, 0, -this.image_anchor_x,
+        0, 1, -this.image_anchor_y,
         0, 0, 1
         );
 
         //for shifting the image back to its original location
         var revMat = mat3(
-        1, 0, this.anchor_x,
-        0, 1, this.anchor_y,
+        1, 0, this.image_anchor_x,
+        0, 1, this.image_anchor_y,
         0, 0, 1
         );
 
@@ -878,11 +913,15 @@ ImdiffApp.prototype = {
         this.tex_inten_text.innerHTML = this.s_val.toFixed(4);
         this.xshear_text.innerHTML = this.var_b.toFixed(4);
         this.yshear_text.innerHTML = this.var_a.toFixed(4);
-        this.center_text.innerHTML = 	String((((	this.window_origin[0] * this.image1.width) +
-        										 	this.window_width/2.0) * this.zoom ).toFixed(2)) +
-                                			" " + 
-                                		String((((	this.window_origin[1] * this.image1.height) + 
-                                					this.window_height/2.0) * this.zoom ).toFixed(2));
+        this.center_text.innerHTML = 	String(		(((this.texture_zoompoint_x + (0.5 - this.canvas_zoomed_x) * this.zoom) + 
+        											(this.window_origin[0] + 
+        											(((this.window_width-this.image1.width)/2.0)/this.image1.width))) * 
+        											this.image1.width).toFixed(2)) +
+        								", " +
+        								String(		(((this.texture_zoompoint_y + (0.5 - this.canvas_zoomed_y) * this.zoom) + 
+        											(this.window_origin[1] + 
+        											(((this.window_height-this.image1.height)/2.0)/this.image1.height))) * 
+        											this.image1.height).toFixed(2));
 	},
 
 

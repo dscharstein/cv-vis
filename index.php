@@ -960,10 +960,10 @@
             </div>
         </div>
         <div id="inputs-box">
-            <p>
+            <!--<p>
                 <input id="im1_box" type="checkbox" /> Image 1
                 <input id="im2_box" type="checkbox" /> Image 2
-            </p>
+            </p>-->
             <p>
                 <select id="effect_menu">
                     <option value="e1">Color Difference</option>
