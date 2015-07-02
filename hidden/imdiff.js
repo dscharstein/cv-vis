@@ -480,7 +480,7 @@ ImdiffApp.prototype = {
         							this.browser_current_x, this.browser_current_y, rect);
 
         this.anchor_dx += gl_new[0] - gl_old[0];
-        this.anchor_dy += gl_new[1] - gl_old[1];
+        
 
 
         // calculate the difference between the last mouse position
@@ -492,6 +492,7 @@ ImdiffApp.prototype = {
         //shift button to lock all motion to horizontal:
         if (!this.pressedKeys[16]) { //if shift button is not being pressed, change in y direction
             this.dy += this.browser_current_y - this.browser_clicked_y;
+            this.anchor_dy += gl_new[1] - gl_old[1];
         } 
 
         // update the old mouse position
@@ -528,7 +529,7 @@ ImdiffApp.prototype = {
             this.zoominc = event.deltaY/this.zoom_scale + 1.0; 
         }
 
-        if (this.zoom * this.zoominc > 0.0001 && this.zoom * this.zoominc < 1.0) {
+        if (this.zoom * this.zoominc > 0.0001) {
         //set zoom to match the current zoom level by multiplying the previous zoom level
         //by 'zoominc'
       		this.zoom *= this.zoominc;
@@ -897,7 +898,7 @@ ImdiffApp.prototype = {
 						this.window_width, this.window_height, 
 						this.window_width, this.window_height);
 	    var u_Image1 = this.gl.getUniformLocation(this.gl.display_program, 'u_Image1');
-	    this.gl.uniform1i(u_Image1, this.gl.textures["out"].textureid);//this.image_out.textureid);
+	    this.gl.uniform1i(u_Image1, this.gl.textures["out"].textureid);
 	    render_image(this.gl);
 
 	    render_anchors(this.gl, transMat, this.anchorZoomMat, this.anchorVertices);
@@ -933,23 +934,23 @@ ImdiffApp.prototype = {
 	inten_diff: function(transMat){
 	    this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]);
 
-	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"]);
-	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"]);
+	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"], this.zoomMat);
+	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"], this.zoomMat);
 
-	    this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
-	    this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
+	    //this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
+	    //this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
 
 
-	    diff(this.gl, this.gl.textures["scratch1"], this.gl.textures["scratch2"], this.gl.textures["out"], this.im1flag, this.im2flag, this.s_val, 0.5);  
+	    diff(this.gl, this.gl.textures["crop1"], this.gl.textures["crop2"], this.gl.textures["out"], this.im1flag, this.im2flag, this.s_val, 0.5);  
 	},
 
 	myblink: function(transMat){
 	    if(this.im1flag){
-	        sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["out"]);
+	        sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["out"], this.zoomMat);
 	    }else{
 	    
 	        this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]);
-	        sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["out"]);
+	        sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["out"], this.zoomMat);
 	    }
 
 	},
@@ -957,21 +958,21 @@ ImdiffApp.prototype = {
 	bleyer: function(transMat){
 
 	    this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]);
-	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"]);
-	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"]);
+	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"], this.zoomMat);
+	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"], this.zoomMat);
 
-	    this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
-	    this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
+	    //this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
+	    //this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
 
-	    this.gl.textures["im1_alter2"] = abs_diff(this.gl, this.gl.textures["scratch1"], this.gl.textures["scratch2"], this.gl.textures["im1_alter2"]); //****
+	    this.gl.textures["im1_alter2"] = abs_diff(this.gl, this.gl.textures["crop1"], this.gl.textures["crop2"], this.gl.textures["im1_alter2"]); //****
 
-	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["scratch2"], this.gl.textures["im2_alter1"]);
+	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["crop2"], this.gl.textures["im2_alter1"]);
 	    this.gl.textures["im2_alter2"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter2"]);
 	    this.gl.textures["im2_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter3"]);
 	    this.gl.textures["im2_alter1"] = magnitude(this.gl, this.gl.textures["im2_alter2"], this.gl.textures["im2_alter3"], this.gl.textures["im2_alter1"]); 
 
 
-	    this.gl.textures["im2_alter2"] = black_white(this.gl, this.gl.textures["scratch1"], this.gl.textures["im2_alter2"]);
+	    this.gl.textures["im2_alter2"] = black_white(this.gl, this.gl.textures["crop1"], this.gl.textures["im2_alter2"]);
 	    this.gl.textures["im2_alter3"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im2_alter2"], this.gl.textures["im2_alter3"]); 
 	    this.gl.textures["im1_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im2_alter2"], this.gl.textures["im1_alter3"]); 
 	    this.gl.textures["im2_alter2"] = magnitude(this.gl, this.gl.textures["im2_alter3"], this.gl.textures["im1_alter3"], this.gl.textures["im2_alter2"]); 
@@ -985,17 +986,17 @@ ImdiffApp.prototype = {
 	gradient: function(transMat){
 
 	    this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]);
-	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"]);
-	    this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
+	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"], this.zoomMat);
+	    //this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
 
-	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["scratch2"], this.gl.textures["im2_alter1"]);
+	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["crop2"], this.gl.textures["im2_alter1"]);
 	    this.gl.textures["im2_alter2"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter2"]);
 	    this.gl.textures["im2_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter3"]);
 	    
 
-	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"]);
-	    this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
-	    this.gl.textures["im1_alter1"] = black_white(this.gl, this.gl.textures["scratch1"], this.gl.textures["im1_alter1"]);
+	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"], this.zoomMat);
+	    //this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
+	    this.gl.textures["im1_alter1"] = black_white(this.gl, this.gl.textures["crop1"], this.gl.textures["im1_alter1"]);
 	    this.gl.textures["im1_alter2"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im1_alter1"], this.gl.textures["im1_alter2"]);
 	    this.gl.textures["im1_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im1_alter1"], this.gl.textures["im1_alter3"]);
 	    this.gl.textures["im1_alter1"] = diff(this.gl, this.gl.textures["im1_alter2"], this.gl.textures["im2_alter2"], this.gl.textures["im1_alter1"],this.im1flag, this.im2flag, this.s_val, 0.0);
@@ -1009,16 +1010,16 @@ ImdiffApp.prototype = {
 	icpr: function(transMat){
 
 	    this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]); 
-	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"]);
-	    this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
+	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"], this.zoomMat);
+	    //this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"], this.zoomMat);
 
-	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["scratch2"], this.gl.textures["im2_alter1"]);
+	    this.gl.textures["im2_alter1"] = black_white(this.gl, this.gl.textures["crop2"], this.gl.textures["im2_alter1"]);
 	    this.gl.textures["im2_alter2"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter2"]); 
 	    this.gl.textures["im2_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im2_alter1"], this.gl.textures["im2_alter3"]); 
 
-	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"]);
-	    this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
-	    this.gl.textures["im1_alter1"] = black_white(this.gl, this.gl.textures["scratch1"], this.gl.textures["im1_alter1"]);
+	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"], this.zoomMat);
+	    //this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["crop1"], this.gl.textures["scratch1"], this.zoomMat);
+	    this.gl.textures["im1_alter1"] = black_white(this.gl, this.gl.textures["crop1"], this.gl.textures["im1_alter1"]);
 	    this.gl.textures["im1_alter2"] = sobel(this.gl, 1, 0, 3, 1, this.gl.textures["im1_alter1"], this.gl.textures["im1_alter2"]); 
 	    this.gl.textures["im1_alter3"] = sobel(this.gl, 0, 1, 3, 1, this.gl.textures["im1_alter1"], this.gl.textures["im1_alter3"]); 
 
@@ -1040,21 +1041,21 @@ ImdiffApp.prototype = {
 	    var nccsize = 3;
 
 	    this.gl.textures["im2_2"] = transform(this.gl, transMat, this.gl.textures["orig_image2"], this.gl.textures["im2_2"]);
-	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"]);
+	    this.gl.textures["crop2"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["im2_2"], this.gl.textures["crop2"], this.zoomMat);
 	    this.gl.textures["scratch2"] = black_white(this.gl, this.gl.textures["crop2"], this.gl.textures["scratch2"]); 
-	    this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["scratch2"], this.gl.textures["scratch1"], this.zoomMat); //R
+	    //this.gl.textures["scratch1"] = zoomim(this.gl, this.gl.textures["scratch2"], this.gl.textures["scratch1"], this.zoomMat); //R
 
 
-	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"]);
+	    this.gl.textures["crop1"] = sample(this.gl, this.window_origin, [this.window_width, this.window_height], this.gl.textures["orig_image1"], this.gl.textures["crop1"], this.zoomMat);
 	    this.gl.textures["im1_alter3"] = black_white(this.gl, this.gl.textures["crop1"], this.gl.textures["im1_alter3"]); 
-	    this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["im1_alter3"], this.gl.textures["scratch2"], this.zoomMat); //L
+	    //this.gl.textures["scratch2"] = zoomim(this.gl, this.gl.textures["im1_alter3"], this.gl.textures["scratch2"], this.zoomMat); //L
 
-	    this.gl.textures["im1_alter1"] = boxfilter(this.gl, this.gl.textures["scratch2"], this.gl.textures["im1_alter1"], nccsize); //Lb
-	    this.gl.textures["im2_alter1"] = boxfilter(this.gl, this.gl.textures["scratch1"], this.gl.textures["im2_alter1"], nccsize); //Rb
+	    this.gl.textures["im1_alter1"] = boxfilter(this.gl, this.gl.textures["im1_alter3"], this.gl.textures["im1_alter1"], nccsize); //Lb
+	    this.gl.textures["im2_alter1"] = boxfilter(this.gl, this.gl.textures["scratch2"], this.gl.textures["im2_alter1"], nccsize); //Rb
 
-	    this.gl.textures["im1_alter2"] = multiply(this.gl, this.gl.textures["scratch2"], this.gl.textures["scratch2"], this.gl.textures["im1_alter2"]); //LL
-	    this.gl.textures["im2_alter2"] = multiply(this.gl, this.gl.textures["scratch1"], this.gl.textures["scratch1"], this.gl.textures["im2_alter2"]); //RR
-	    this.gl.textures["crop2"] = multiply(this.gl, this.gl.textures["scratch2"], this.gl.textures["scratch1"], this.gl.textures["crop2"]); //RB
+	    this.gl.textures["im1_alter2"] = multiply(this.gl, this.gl.textures["im1_alter3"], this.gl.textures["im1_alter3"], this.gl.textures["im1_alter2"]); //LL
+	    this.gl.textures["im2_alter2"] = multiply(this.gl, this.gl.textures["scratch2"], this.gl.textures["scratch2"], this.gl.textures["im2_alter2"]); //RR
+	    this.gl.textures["crop2"] = multiply(this.gl, this.gl.textures["im1_alter3"], this.gl.textures["scratch2"], this.gl.textures["crop2"]); //RB
 
 	    this.gl.textures["im1_alter3"] = boxfilter(this.gl, this.gl.textures["im1_alter2"], this.gl.textures["im1_alter3"], nccsize); //LLb
 	    this.gl.textures["im2_alter3"] = boxfilter(this.gl, this.gl.textures["im2_alter2"], this.gl.textures["im2_alter3"], nccsize); //RRb
@@ -1316,7 +1317,7 @@ function render_anchors(gl, transMat, zoomMat, anchorVertices){
 }
 
 
-function sample(gl, origin, outRes, inTex, outTex){
+function sample(gl, origin, outRes, inTex, outTex, zoomMat){
     switch_shader(gl, gl.sampler_program, inTex.width, inTex.height, outTex.width, outTex.height);
     var u_Image1 = gl.getUniformLocation(gl.sampler_program, 'u_Image1');
     gl.uniform1i(u_Image1, inTex.textureid);
@@ -1330,6 +1331,9 @@ function sample(gl, origin, outRes, inTex, outTex){
 
     var u_ImOutRes = gl.getUniformLocation(gl.sampler_program, 'u_ImOutRes');
     gl.uniform2f(u_ImOutRes, outRes[0], outRes[1]);
+
+    var u_Zoom = gl.getUniformLocation(gl.sampler_program, 'u_Zoom');
+    gl.uniformMatrix3fv(u_Zoom, false, flatten(zoomMat));
 
     var targetFBO = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);

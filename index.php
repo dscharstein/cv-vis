@@ -114,7 +114,7 @@
             uniform vec2 u_ImInRes;
             uniform vec2 u_ImOutRes;
             uniform vec2 u_Origin;
-            //uniform float u_Zoom;
+            uniform mat3 u_Zoom;
 
             vec2 uv;
             vec2 uv_1;
@@ -126,7 +126,7 @@
             void main(){
 
                 vec2 scale_sample = (u_ImOutRes / u_ImInRes);
-                uv_2 = u_Origin + (scale_sample * v_TexCoord);
+                uv_2 = u_Origin + (scale_sample * (u_Zoom * vec3(v_TexCoord, 1.0)).xy);
                 //uv_2 = uv_1*u_Zoom;
                 if(uv_2.x >= 0.0 && uv_2.x <= 1.0 && uv_2.y >= 0.0 && uv_2.y <= 1.0){
                     gl_FragColor = texture2D(u_Image1, uv_2);
@@ -882,7 +882,6 @@
         //***********************************ANCHOR SHADERS:*****************************************************************
             attribute vec3 a_Position;
             attribute vec3 a_Color;
-            varying vec3 v_Color;
             uniform mat3 u_Transform;
             uniform mat3 u_ZoomMat;
 
@@ -897,7 +896,6 @@
 
                 gl_Position = vec4((u_ZoomMat * u_Transform * vec3((clipCoords.xy), 1.0)).xy, 1.0, 1.0);
                 gl_PointSize = 10.0;
-                v_Color = a_Color;
 
             }
         </script>
@@ -906,10 +904,9 @@
         
         <script id="anchor-fragment-shader" type="x-shader/x-fragment">
             precision highp float;
-            varying vec3 v_Color;
              
             void main(){
-                gl_FragColor = vec4(v_Color, 1.0);
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
             } 
         </script>
             
