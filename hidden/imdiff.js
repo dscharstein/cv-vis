@@ -188,7 +188,7 @@ function ImdiffApp(){
     this.dy = 0.0;				//top image's current shift in y direction
 
     //variables to control affine transformations:
-    this.var_a = 1;				
+    this.var_a = 0;				
     this.var_b = 0;
     this.var_d = 0; 
     this.var_e = 1;
@@ -748,7 +748,7 @@ ImdiffApp.prototype = {
 
         //reset var_a:
         if (this.pressedKeys[71] && this.pressedKeys[16]){ //shift-g
-            this.var_a = 1.0;
+            this.var_a = 0.0;
         }
 
         //reset var_b
@@ -772,7 +772,7 @@ ImdiffApp.prototype = {
         if (this.pressedKeys[82] && this.pressedKeys[16]){
             this.moveDist = 1;
             this.s_val = 0.75;
-            this.var_a = 1;
+            this.var_a = 0;
             this.var_b = 0;
             this.var_d = 0; 
             this.var_e = 1;
@@ -834,7 +834,7 @@ ImdiffApp.prototype = {
 
         //for affine transformations
         var affineMat = mat3(
-        this.var_a, this.var_b, 0,
+        (1+this.var_a), this.var_b, 0,
         this.var_d, this.var_e, 0,
         0, 0, 1
         );
@@ -912,8 +912,8 @@ ImdiffApp.prototype = {
         this.dy_text.innerHTML = (-this.dy).toFixed(4);
         this.speed_text.innerHTML = this.moveDist.toFixed(4);
         this.tex_inten_text.innerHTML = this.s_val.toFixed(4);
-        this.xshear_text.innerHTML = this.var_b.toFixed(4);
-        this.yshear_text.innerHTML = this.var_a.toFixed(4);
+        this.xshear_text.innerHTML = this.var_a.toFixed(4);
+        this.yshear_text.innerHTML = this.var_b.toFixed(4);
         this.center_text.innerHTML = 	String(		(((this.texture_zoompoint_x + (0.5 - this.canvas_zoomed_x) * this.zoom) + 
         											(this.window_origin[0] + 
         											(((this.window_width-this.image1.width)/2.0)/this.image1.width))) * 

@@ -895,7 +895,7 @@
                 vec3 clipCoords = doubled_pos - 1.0;
 
                 gl_Position = vec4((u_ZoomMat * u_Transform * vec3((clipCoords.xy), 1.0)).xy, 1.0, 1.0);
-                gl_PointSize = 10.0;
+                gl_PointSize = 8.0;
 
             }
         </script>
