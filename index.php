@@ -9,7 +9,7 @@
         
         <link rel="stylesheet" type="text/css" href="assets/style/main-style.css" />
 
-        <script type="text/javascript" src="hidden/imdiff.js"></script>
+        <script type="text/javascript" src="imdiff.js"></script>
 
 
         <script id="display-vertex-shader" type="x-shader/x-vertex">
