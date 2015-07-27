@@ -56,5 +56,6 @@ All of the image processing functions use separate shaders, which are written in
 
 ### Application Structure 
 
+The application consists of a single JavaScript class called imdiff_app. To continually update the view, the application executes in a loop, repeatededly calling its `update()` function while it is running. It provides event listeners for key up, key down, mouse up, mouse down, mouse move and wheel event (mouse scroll). 
 
 
