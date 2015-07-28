@@ -23,26 +23,24 @@ To add a pair of images to view with the app, add them to the "images" folder. T
 
 #### Key Bindings
 
-| Key            |      Effect     |
-|----------------|-----------------|
-| WASD/Arrow Keys/Click & Drag | shift top image |
-| q/e | decrease/increase image motion & shear speed |
-| z/x | decrease/increase texture intensity |
-| g/h | x-shear |
-| n/m | y-shear |
-| alt-click | set warp anchor point |
-| b | blink between images |
-| shift | lock image motion to horizontal only |
-| IJKL | shift window |      
-| mouse scroll | zoom |
-| r | reset image position |
-| shift-g | reset x disparity gradient value |
-| shift-n | reset y disparity gradient value |
-| shift-y | reset dy |
-| shift-p | reset zoom |
-| shift-r | reset all |
-
-
+| Key                          | Effect                                       |
+|------------------------------|----------------------------------------------|
+| WASD/Arrow Keys/Click & Drag | shift top image                              |
+| q/e                          | decrease/increase image motion & shear speed |
+| z/x                          | decrease/increase texture intensity          |
+| g/h                          | x-shear                                      |
+| n/m                          | y-shear                                      |
+| alt-click                    | set warp anchor point                        |
+| b                            | blink between images                         |
+| shift                        | lock image motion to horizontal only         |
+| IJKL                         | shift window                                 |
+| mouse scroll                 | zoom                                         |
+| r                            | reset image position                         |
+| shift-g                      | reset x disparity gradient value             |
+| shift-n                      | reset y disparity gradient value             |
+| shift-y                      | reset dy                                     |
+| shift-p                      | reset zoom                                   |
+| shift-r                      | reset all                                    |
 
 ## Developer Information
 
@@ -57,5 +55,5 @@ All of the image processing functions use separate shaders, which are written in
 ### Application Structure 
 
 The application consists of a single JavaScript class called imdiff_app. To continually update the view, the application executes in a loop, repeatededly calling its `update()` function while it is running. It provides event listeners for key up, key down, mouse up, mouse down, mouse move and wheel event (mouse scroll). 
-
+ 
 
