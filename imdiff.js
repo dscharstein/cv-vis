@@ -657,20 +657,24 @@ ImdiffApp.prototype = {
 	window_width_change: function(){
 		this.window_width = this.window_width_input.value;
 		this.resize_canvas();
+		this.window_width_input.blur();
 		this.init_gl();	
 	},
 	window_height_change: function(){
 		this.window_height = this.window_height_input.value;
 		this.resize_canvas();
+		this.window_height_input.blur();
 		this.init_gl();
 	},
 	image1_menu_change: function(){
 		this.init_gl();
 		this.load_images();
+		this.image1_menu.blur();
 	},
 	image2_menu_change: function(){
 		this.init_gl();
 		this.load_images();
+		this.image2_menu.blur();
 	},
 	effect_menu_change: function(){
 		switch(this.effect_menu.value){
@@ -691,6 +695,7 @@ ImdiffApp.prototype = {
 				break;
 		}
 		this.old_state.mode = this.mode;
+		this.effect_menu.blur();
 	},
 
 	key_down_handler: function(event){
@@ -736,7 +741,7 @@ ImdiffApp.prototype = {
             //if D key or right arrow is pressed, shift in pos x direction
         } else if (this.pressedKeys[68] || this.pressedKeys[39]) { 
             this.dx += this.moveDist;
-            this.anchor_dx += 2.0 * (this.moveDist/this.window_height);
+            this.anchor_dx += 2.0 * (this.moveDist/this.window_width);
         } 
     
         //vertical motion key control
@@ -745,7 +750,7 @@ ImdiffApp.prototype = {
         	//if W key or up arrow is pressed, shift in pos y direction
             if (this.pressedKeys[87] || this.pressedKeys[38]) { 
                 this.dy -= this.moveDist;
-                this.anchor_dy += 2.0 * (this.moveDist/this.window_width);
+                this.anchor_dy += 2.0 * (this.moveDist/this.window_height);
             //if S key or down arrow is pressed, shift in neg y direction
             } else if (this.pressedKeys[83] || this.pressedKeys[40]) { 
                 this.dy += this.moveDist;
