@@ -451,6 +451,31 @@ ImdiffApp.prototype = {
 		this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 	},
 
+	reset_control_variables: function(){
+		this.dx = 0;
+        this.dy = 0;
+        this.anchor_dx = 0.0;
+        this.anchor_dy = 0.0;
+		this.moveDist = 1;
+        this.s_val = 0.75;
+        this.var_a = 0;
+        this.var_b = 0;
+        this.var_d = 0; 
+        this.var_e = 1;
+        this.zoomMat = mat3();
+        this.anchorZoomMat = mat3();
+        this.zoom = 1.0;
+        this.zoominc = 1.0;
+        this.texture_zoompoint_x = 0.0;
+        this.texture_zoompoint_y = 0.0;
+        this.canvas_zoomed_x = 0.0;
+        this.canvas_zoomed_y = 0.0;
+        this.anchor_x = 0.5;
+        this.anchor_y = 0.5;
+        this.anchorVertices = [this.anchor_x, this.anchor_y, 	
+        						1.0, 0.0, 0.0, 0.0];
+	},
+
 	init_listeners: function(){
 		this.canvas.addEventListener(	"mousedown", 
 										this.mouse_down_handler.bind(this));
@@ -657,14 +682,17 @@ ImdiffApp.prototype = {
 	window_width_change: function(){
 		this.window_width = this.window_width_input.value;
 		this.resize_canvas();
+		this.reset_control_variables();
 		this.window_width_input.blur();
 		this.init_gl();	
+		this.reset_control_variables();
 	},
 	window_height_change: function(){
 		this.window_height = this.window_height_input.value;
 		this.resize_canvas();
 		this.window_height_input.blur();
 		this.init_gl();
+		this.reset_control_variables();
 	},
 	image1_menu_change: function(){
 		this.init_gl();
@@ -856,24 +884,7 @@ ImdiffApp.prototype = {
         //******reset all controls********
         //shift-r
         if (this.pressedKeys[82] && this.pressedKeys[16]){
-            this.moveDist = 1;
-            this.s_val = 0.75;
-            this.var_a = 0;
-            this.var_b = 0;
-            this.var_d = 0; 
-            this.var_e = 1;
-            this.zoomMat = mat3();
-            this.anchorZoomMat = mat3();
-            this.zoom = 1.0;
-            this.zoominc = 1.0;
-            this.texture_zoompoint_x = 0.0;
-            this.texture_zoompoint_y = 0.0;
-            this.canvas_zoomed_x = 0.0;
-            this.canvas_zoomed_y = 0.0;
-            this.anchor_x = 0.5;
-            this.anchor_y = 0.5;
-            this.anchorVertices = [this.anchor_x, this.anchor_y, 	
-            						1.0, 0.0, 0.0, 0.0];
+            this.reset_control_variables();
         }
 
         //set to blink mode and displays image 2
