@@ -523,7 +523,8 @@ ImdiffApp.prototype = {
         this.browser_current_x = event.clientX;
         this.browser_current_y = event.clientY;
 
-		if (!this.mouse_down) {	// if the mouse is not down exit function
+		if (!this.mouse_down || this.pressedKeys[18]) {	// if the mouse is not
+														//down or doing an alt-click exit function
             return;
         }
 
